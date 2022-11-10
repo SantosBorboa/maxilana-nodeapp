@@ -88,7 +88,9 @@ app.use(async (req, res, next) => {
                 //VERIFICAMOS LA EXPIRACIÓN DEL TOKEN DE SEGURIDAD.
                 const dt = new Date();
                 const dt2 = new Date(dataToken.date);
-                if (dt > dt2) { return res.send({ error: 'El token de autorización ha expirado.' }) };
+                if (dt > dt2) { 
+                    return res.send({ error: 'El token de autorización ha expirado.' 
+                })};
 
                 return next();
             })
