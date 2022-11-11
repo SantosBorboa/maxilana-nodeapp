@@ -63,33 +63,28 @@ app.use(function (req, res, next) {
 });
 
 //middlewares de autenticacion por token.....
-//experimental por el momento.
-app.use(async(req, res, next)=>{
-    return next();
-});
-
 app.use(async (req, res, next) => {
     const verificarRuta = rutasRequeridas(req.originalUrl);
     if (verificarRuta) {
         try {
             const authToken = req.headers['authorization'];
             //delete req.headers.authorization;
-            if (!authToken) { return res.send({ error: 'El token de autorización no ha sido proporcionado.' }) }
+            if (!authToken) { return res.status(400).send({ error: 'El token de autorización no ha sido proporcionado.' }) }
             jwt.verify(authToken, jwtConf.jwtSecretKey, async (error, data) => {
                 if (error) {
                     return res.send({ error: error.message });
                 }
                 const dataToken = await jwt.verify(authToken, jwtConf.jwtSecretKey);
-                if (dataToken === undefined || dataToken === null) { return res.send({ error: 'El token de autorización no es válido.' }) }
+                if (dataToken === undefined || dataToken === null) { return res.status(400).send({ error: 'El token de autorización no es válido.' }) }
 
                 const usuarioValido = usuariosValidos(dataToken.user);
-                if (!usuarioValido) { return res.send({ error: 'El usuario no está autorizado a usar el end point.' }) }
+                if (!usuarioValido) { return res.status(401).send({ error: 'El usuario no está autorizado a usar el end point.' }) }
 
                 //VERIFICAMOS LA EXPIRACIÓN DEL TOKEN DE SEGURIDAD.
                 const dt = new Date();
                 const dt2 = new Date(dataToken.date);
                 if (dt > dt2) { 
-                    return res.send({ error: 'El token de autorización ha expirado.' 
+                    return res.status(401).send({ error: 'El token de autorización ha expirado.' 
                 })};
 
                 return next();
@@ -106,50 +101,18 @@ app.use(async (req, res, next) => {
 });
 
 //******ROUTES*******//
+const rematesRouter = require('./routes/Remates/Remates');
+const securityRouter = require('./routes/Security/security');
+
+app.get('/api/productos/app/categorias', rematesRouter);
+app.get('/api/productos', rematesRouter);
+app.get('/api/productos/prueba', rematesRouter);
+app.get('/api/productos/:idproducto', rematesRouter);
+app.get('/api/productos/:idproducto/precio', rematesRouter);
 
 //security
-app.post('/api/security/gettoken', async (req, res, next) => {
-    try {
-        const user = req.body.usuario ? req.body.usuario : undefined;
-        const password = req.body.password ? req.body.password : undefined;
+app.post('/api/security/gettoken', securityRouter);
 
-        let usuarioValido = await UsuarioCorrecto(user, password);
-        usuarioValido = usuarioValido ? usuarioValido : user == '@adminMaxilana2022@' ? true : false;
-        if (!usuarioValido) { return res.send({ error: 'La combinación usuario/contraseña no es válida.' }) }
-
-        const dt = new Date();
-        const dtTime = addMinutes(dt, 5);
-        const data = {
-            user,
-            password,
-            date: dtTime,
-        }
-        const token = await jwt.sign(data, jwtConf.jwtSecretKey);
-        console.log(token);
-        return res.send({ token });
-    } catch (error) {
-        return res.send({ error: error.message });
-    }
-});
-function addMinutes(date, minutes) {
-    return new Date(date.getTime() + minutes * 60000);
-};
-const UsuarioCorrecto = async (usuario, contraseña) => {
-    return new Promise((resolve, reject) => {
-        if (usuario !== undefined & contraseña !== undefined) {
-            const args = { strUsuario: usuario, strContraseña: contraseña }
-            soap.createClient('https://grupoalvarez.com.mx/wsiniciosesion/serviciosiniciosesion.asmx?WSDL', (error, client) => {
-                if (error) { reject(error) }
-                client.UsuarioCorrecto(args, (error, response) => {
-                    if (error) { reject(error) }
-                    resolve(response);
-                })
-            })
-        } else {
-            resolve(false);
-        }
-    });
-};
 
 app.get('/api/datos/cat', (req,res,next)=>{
     remates.getCat().then(respuesta=>{
@@ -158,106 +121,7 @@ app.get('/api/datos/cat', (req,res,next)=>{
 })
 
 //REMATES
-app.get('/api/productos/app/categorias', (req, res) => {
-    remates.Obtenerporcategoriaapp().then(respuesta => {
-        res.send(respuesta);
-    });
-});
-app.get('/api/productos', (req, res) => {
-    let categoria = req.query.categoria ? req.query.categoria : undefined;
-    let query = req.query.q ? req.query.q : undefined;
-    let sucursal = req.query.sucursal ? req.query.sucursal : undefined;
-    let ciudades = req.query.ciudad ? req.query.ciudad : undefined;
 
-    let categoria_or = req.query._categoria ? req.query._categoria : undefined;
-    let query_or = req.query._q ? req.query._q : undefined;
-    let sucursal_or = req.query._sucursal ? req.query._sucursal : undefined;
-    let ciudades_or = req.query._ciudad ? req.query._ciudad : undefined;
-
-    let vtalinea = req.query.vtalinea ? req.query.vtalinea : undefined;
-
-    let codigo = req.query.codigo ? req.query.codigo : undefined;
-    let orden = req.query.orden ? req.query.orden : undefined;
-    let min = req.query.min ? req.query.min : undefined;
-    let max = req.query.max ? req.query.max : undefined;
-
-    let page = req.query.page ? req.query.page : 1;
-    let limits = req.query.limit ? req.query.limit : 24;
-    remates.Obtenertodo(
-        categoria,
-        query,
-        sucursal,
-        ciudades,
-        categoria_or,
-        query_or,
-        sucursal_or,
-        ciudades_or,
-        orden,
-        min,
-        max,
-        vtalinea,
-        page,
-        limits,
-        codigo
-    ).then(respuesta => {
-        res.send(respuesta);
-    });
-});
-app.get('/api/productos/prueba', (req, res) => {
-
-    let categoria = req.query.categoria ? req.query.categoria : undefined;
-    let query = req.query.q ? req.query.q : undefined;
-    let sucursal = req.query.sucursal ? req.query.sucursal : undefined;
-    let ciudades = req.query.ciudad ? req.query.ciudad : undefined;
-
-    let categoria_or = req.query._categoria ? req.query._categoria : undefined;
-    let query_or = req.query._q ? req.query._q : undefined;
-    let sucursal_or = req.query._sucursal ? req.query._sucursal : undefined;
-    let ciudades_or = req.query._ciudad ? req.query._ciudad : undefined;
-
-    let vtalinea = req.query.vtalinea ? req.query.vtalinea : undefined;
-
-    let codigo = req.query.codigo ? req.query.codigo : undefined;
-    let orden = req.query.orden ? req.query.orden : undefined;
-    let min = req.query.min ? req.query.min : undefined;
-    let max = req.query.max ? req.query.max : undefined;
-
-    let page = req.query.page ? req.query.page : 1;
-    let limits = req.query.limit ? req.query.limit : 10;
-    remates.Obtenertodoprueba(
-        categoria,
-        query,
-        sucursal,
-        ciudades,
-        categoria_or,
-        query_or,
-        sucursal_or,
-        ciudades_or,
-        orden,
-        min,
-        max,
-        vtalinea,
-        page,
-        limits,
-        codigo
-    ).then(respuesta => {
-        res.send(respuesta);
-    });
-
-
-});
-app.get('/api/productos/:idproducto', (req, res) => {
-    const { idproducto } = req.params
-    remates.Obtenerarticulosid(idproducto).then(respuesta => {
-        res.send(respuesta);
-    })
-});
-app.get('/api/productos/:idproducto/precio', (req, res) => {
-    const { idproducto } = req.params
-    remates.Obtenerarticulosidprecio(idproducto).then(respuesta => {
-        res.send(respuesta);
-    })
-});
 
 //EMPENO
 app.get('/api/boleta', (req, res) => {

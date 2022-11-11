@@ -7,9 +7,10 @@ const SaveStorage = (data) => {
         const con = mysql.createConnection(configMaxilanaDB);
         con.connect((conerror) => {
             if (conerror) return reject(conerror);
-            const query = `insert into apidatastorage (data) values (?)`;
-            libsodium.encriptar(data).then((dataEncoded) => {
-                con.query(query, [data], (err, result, fields) => {
+            const query = `insert into apidatastorage (data, data2) values (?,?)`;
+            let formattedData = data.replace(/"/g,'·')
+            libsodium.encriptar(formattedData).then((dataEncoded) => {
+                con.query(query, [undefined, dataEncoded], (err, result, fields) => {
                     if (err) return reject(err);
                     con.end(errorEnd => {
                         if (errorEnd) return reject(errorEnd);
@@ -47,9 +48,18 @@ const GetDataStorage = (id) => {
             const query = `select * from apidatastorage where id = ?`;
             con.query(query, [id], (err, result, fields) => {
                 if (err) return reject(err);
-                con.end(errorEnd => {
+                con.end(async(errorEnd) => {
                     if (errorEnd) return reject(errorEnd);
-                    resolve(result[0]); 
+                    if(result.length > 0) {
+                        const {data, data2} = result[0]
+                        const r = data2? await libsodium.desencriptar(data2): ''
+                        const rs = {
+                            data: await r.replace(/Â/g,''),
+                        }
+                        return resolve(rs); 
+                    }else{
+                        return resolve(undefined)
+                    }
                 });
             });
         });
