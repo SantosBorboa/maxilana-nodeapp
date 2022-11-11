@@ -63,33 +63,28 @@ app.use(function (req, res, next) {
 });
 
 //middlewares de autenticacion por token.....
-//experimental por el momento.
-app.use(async(req, res, next)=>{
-    return next();
-});
-
 app.use(async (req, res, next) => {
     const verificarRuta = rutasRequeridas(req.originalUrl);
     if (verificarRuta) {
         try {
             const authToken = req.headers['authorization'];
             //delete req.headers.authorization;
-            if (!authToken) { return res.send({ error: 'El token de autorización no ha sido proporcionado.' }) }
+            if (!authToken) { return res.status(400).send({ error: 'El token de autorización no ha sido proporcionado.' }) }
             jwt.verify(authToken, jwtConf.jwtSecretKey, async (error, data) => {
                 if (error) {
                     return res.send({ error: error.message });
                 }
                 const dataToken = await jwt.verify(authToken, jwtConf.jwtSecretKey);
-                if (dataToken === undefined || dataToken === null) { return res.send({ error: 'El token de autorización no es válido.' }) }
+                if (dataToken === undefined || dataToken === null) { return res.status(400).send({ error: 'El token de autorización no es válido.' }) }
 
                 const usuarioValido = usuariosValidos(dataToken.user);
-                if (!usuarioValido) { return res.send({ error: 'El usuario no está autorizado a usar el end point.' }) }
+                if (!usuarioValido) { return res.status(401).send({ error: 'El usuario no está autorizado a usar el end point.' }) }
 
                 //VERIFICAMOS LA EXPIRACIÓN DEL TOKEN DE SEGURIDAD.
                 const dt = new Date();
                 const dt2 = new Date(dataToken.date);
                 if (dt > dt2) { 
-                    return res.send({ error: 'El token de autorización ha expirado.' 
+                    return res.status(401).send({ error: 'El token de autorización ha expirado.' 
                 })};
 
                 return next();
@@ -106,50 +101,18 @@ app.use(async (req, res, next) => {
 });
 
 //******ROUTES*******//
+const rematesRouter = require('./routes/Remates/Remates');
+const securityRouter = require('./routes/Security/security');
+
+app.get('/api/productos/app/categorias', rematesRouter);
+app.get('/api/productos', rematesRouter);
+app.get('/api/productos/prueba', rematesRouter);
+app.get('/api/productos/:idproducto', rematesRouter);
+app.get('/api/productos/:idproducto/precio', rematesRouter);
 
 //security
-app.post('/api/security/gettoken', async (req, res, next) => {
-    try {
-        const user = req.body.usuario ? req.body.usuario : undefined;
-        const password = req.body.password ? req.body.password : undefined;
+app.post('/api/security/gettoken', securityRouter);
 
-        let usuarioValido = await UsuarioCorrecto(user, password);
-        usuarioValido = usuarioValido ? usuarioValido : user == '@adminMaxilana2022@' ? true : false;
-        if (!usuarioValido) { return res.send({ error: 'La combinación usuario/contraseña no es válida.' }) }
-
-        const dt = new Date();
-        const dtTime = addMinutes(dt, 5);
-        const data = {
-            user,
-            password,
-            date: dtTime,
-        }
-        const token = await jwt.sign(data, jwtConf.jwtSecretKey);
-        console.log(token);
-        return res.send({ token });
-    } catch (error) {
-        return res.send({ error: error.message });
-    }
-});
-function addMinutes(date, minutes) {
-    return new Date(date.getTime() + minutes * 60000);
-};
-const UsuarioCorrecto = async (usuario, contraseña) => {
-    return new Promise((resolve, reject) => {
-        if (usuario !== undefined & contraseña !== undefined) {
-            const args = { strUsuario: usuario, strContraseña: contraseña }
-            soap.createClient('https://grupoalvarez.com.mx/wsiniciosesion/serviciosiniciosesion.asmx?WSDL', (error, client) => {
-                if (error) { reject(error) }
-                client.UsuarioCorrecto(args, (error, response) => {
-                    if (error) { reject(error) }
-                    resolve(response);
-                })
-            })
-        } else {
-            resolve(false);
-        }
-    });
-};
 
 app.get('/api/datos/cat', (req,res,next)=>{
     remates.getCat().then(respuesta=>{
@@ -158,106 +121,7 @@ app.get('/api/datos/cat', (req,res,next)=>{
 })
 
 //REMATES
-app.get('/api/productos/app/categorias', (req, res) => {
-    remates.Obtenerporcategoriaapp().then(respuesta => {
-        res.send(respuesta);
-    });
-});
-app.get('/api/productos', (req, res) => {
-    let categoria = req.query.categoria ? req.query.categoria : undefined;
-    let query = req.query.q ? req.query.q : undefined;
-    let sucursal = req.query.sucursal ? req.query.sucursal : undefined;
-    let ciudades = req.query.ciudad ? req.query.ciudad : undefined;
 
-    let categoria_or = req.query._categoria ? req.query._categoria : undefined;
-    let query_or = req.query._q ? req.query._q : undefined;
-    let sucursal_or = req.query._sucursal ? req.query._sucursal : undefined;
-    let ciudades_or = req.query._ciudad ? req.query._ciudad : undefined;
-
-    let vtalinea = req.query.vtalinea ? req.query.vtalinea : undefined;
-
-    let codigo = req.query.codigo ? req.query.codigo : undefined;
-    let orden = req.query.orden ? req.query.orden : undefined;
-    let min = req.query.min ? req.query.min : undefined;
-    let max = req.query.max ? req.query.max : undefined;
-
-    let page = req.query.page ? req.query.page : 1;
-    let limits = req.query.limit ? req.query.limit : 24;
-    remates.Obtenertodo(
-        categoria,
-        query,
-        sucursal,
-        ciudades,
-        categoria_or,
-        query_or,
-        sucursal_or,
-        ciudades_or,
-        orden,
-        min,
-        max,
-        vtalinea,
-        page,
-        limits,
-        codigo
-    ).then(respuesta => {
-        res.send(respuesta);
-    });
-});
-app.get('/api/productos/prueba', (req, res) => {
-
-    let categoria = req.query.categoria ? req.query.categoria : undefined;
-    let query = req.query.q ? req.query.q : undefined;
-    let sucursal = req.query.sucursal ? req.query.sucursal : undefined;
-    let ciudades = req.query.ciudad ? req.query.ciudad : undefined;
-
-    let categoria_or = req.query._categoria ? req.query._categoria : undefined;
-    let query_or = req.query._q ? req.query._q : undefined;
-    let sucursal_or = req.query._sucursal ? req.query._sucursal : undefined;
-    let ciudades_or = req.query._ciudad ? req.query._ciudad : undefined;
-
-    let vtalinea = req.query.vtalinea ? req.query.vtalinea : undefined;
-
-    let codigo = req.query.codigo ? req.query.codigo : undefined;
-    let orden = req.query.orden ? req.query.orden : undefined;
-    let min = req.query.min ? req.query.min : undefined;
-    let max = req.query.max ? req.query.max : undefined;
-
-    let page = req.query.page ? req.query.page : 1;
-    let limits = req.query.limit ? req.query.limit : 10;
-    remates.Obtenertodoprueba(
-        categoria,
-        query,
-        sucursal,
-        ciudades,
-        categoria_or,
-        query_or,
-        sucursal_or,
-        ciudades_or,
-        orden,
-        min,
-        max,
-        vtalinea,
-        page,
-        limits,
-        codigo
-    ).then(respuesta => {
-        res.send(respuesta);
-    });
-
-
-});
-app.get('/api/productos/:idproducto', (req, res) => {
-    const { idproducto } = req.params
-    remates.Obtenerarticulosid(idproducto).then(respuesta => {
-        res.send(respuesta);
-    })
-});
-app.get('/api/productos/:idproducto/precio', (req, res) => {
-    const { idproducto } = req.params
-    remates.Obtenerarticulosidprecio(idproducto).then(respuesta => {
-        res.send(respuesta);
-    })
-});
 
 //EMPENO
 app.get('/api/boleta', (req, res) => {
@@ -2130,115 +1994,9 @@ app.post('/api/pagos/2dsecure/web/boletas', router2dsecure);
 app.post('/api/pagos/2dsecure/web/producto', router2dsecure);
 app.post('/api/pagos/2dsecure/vales', router2dsecure);
 app.post('/api/pagos/2dsecure/pp', router2dsecure);
-app.post('/api/pagos/2dsecure/producto/v1', upload.array(), (req, res, next) => {
+app.post('/api/pagos/2dsecure/producto/v1', router2dsecure);
+app.post('/api/pagos/2dsecure/boletas/v1', router2dsecure);
 
-    const Reference3D = req.body.Reference3D;
-    var costoenvio = req.body.envio;
-    const Seguro = req.body.seguro;
-    const ClickCollect = req.body.recogesucursal;
-
-    var tarjetadecrypt = '';
-    var ccvdecrypt = '';
-    var vencimientodecrypt = '';
-    var precioreal = '';
-    var pedido = '';
-
-    pw2remates.Obtenerdatosv2(Reference3D).then(respuesta => {
-        var datainfo = respuesta[0];
-        var CorreoPersonal = datainfo.correoparaconfirmaciondecompra + "," + datainfo.correosucursal;
-        CorreoPersonal = CorreoPersonal.split(",");
-        libsodium.desencriptar(datainfo.tarjeta).then(respuesta => {
-            tarjetadecrypt = respuesta;
-            libsodium.desencriptar(datainfo.vencimiento).then(respuesta => {
-                vencimientodecrypt = respuesta;
-                libsodium.desencriptar(datainfo.ccv2).then(respuesta => {
-                    ccvdecrypt = respuesta;
-                    pw2remates.ejecutarventav2(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, datainfo.monto, datainfo.codigosucursal, datainfo.upc, datainfo.status, datainfo.eci, datainfo.xid, datainfo.cavv, Reference3D).then(respuesta => {
-                        if (respuesta.resultado_payw == "A") {
-                            var data = respuesta;
-                            sendinfo.grabardatos(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.upc, costoenvio, datainfo.precioneto, Seguro, ClickCollect).then(respuesta => {
-                                precioreal = (parseFloat(datainfo.monto) - parseFloat(costoenvio));
-                                precioreal = (parseFloat(precioreal) - parseFloat(Seguro));
-                                costoenvio = (parseFloat(costoenvio) + parseFloat(Seguro));
-                                email.sendemail(datainfo.nombre, datainfo.celular, datainfo.direccion, datainfo.colonia, datainfo.codigopostal, datainfo.municipio, datainfo.estado, datainfo.instrucciones, datainfo.articulo, datainfo.upc, precioreal, costoenvio, datainfo.monto, CorreoPersonal, datainfo.correoelectronico, datainfo.nombresucursal);
-                                var response = {
-                                    referencia: Reference3D,
-                                    monto: parseFloat(datainfo.monto),
-                                    articulo: datainfo.articulo,
-                                    contacto: datainfo.celular,
-                                    dom: datainfo.direccion + " " + datainfo.colonia + " " + datainfo.codigopostal,
-                                    mun: datainfo.municipio,
-                                    ciudad: datainfo.estado,
-                                    nombreenvio: datainfo.nombre,
-                                    envio: costoenvio
-                                }
-                                res.status(200).send(JSON.stringify(response));
-                            });
-                        } else {
-                            res.send("D");
-                        }
-                    });
-                });
-            });
-        });
-    });
-});
-app.post('/api/pagos/2dsecure/boletas/v1', upload.array(), (req, res, next) => {//AQUI
-
-    const Reference3D = req.body.Reference3D;
-    const Cliente = req.body.Cliente;
-    const fechaConsulta = req.body.fechaConsulta;
-    const idCliente = req.body.numerocliente ? req.body.numerocliente : undefined;
-    const aplicacomision = req.body.aplicacomision ? req.body.aplicacomision : 1;
-
-    var tarjetadecrypt = '';
-    var ccvdecrypt = '';
-    var vencimientodecrypt = '';
-    var boletareference = '';
-    pw2empeno.Obtenerdatosboletasv3(Reference3D).then(respuesta => {
-        console.log(respuesta)
-        if (respuesta !== null) {
-            var datainfo = respuesta[0];
-            var CorreoPersonal = datainfo.correoelectronicoparanotificacion;
-            CorreoPersonal = CorreoPersonal.split(",");
-            boletareference = Math.floor(datainfo.boleta);
-            libsodium.desencriptar(datainfo.tarjeta).then(respuesta => {
-                tarjetadecrypt = respuesta;
-                libsodium.desencriptar(datainfo.vencimiento).then(respuesta => {
-                    vencimientodecrypt = respuesta;
-                    libsodium.desencriptar(datainfo.ccv2).then(respuesta => {
-                        ccvdecrypt = respuesta;
-                        pw2empeno.ejecutarcobrov4(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, datainfo.monto, datainfo.codigosucursal, boletareference, datainfo.status, datainfo.eci, datainfo.xid, datainfo.cavv).then(respuesta => {
-                            if (respuesta.resultado_payw == "A") {
-                                var data = respuesta;
-                                sms.send(datainfo.celular, "Se aplicó un pago a la boleta: " + datainfo.boleta + " por un monto de : $" + datainfo.monto);
-                                sms.sendInfoCentral(datainfo.celular, "Se aplicó un pago a la boleta: " + datainfo.boleta + " por un monto de : $" + datainfo.monto);
-                                sendinfo.grabardatosempenov3(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.boleta, fechaConsulta, datainfo.codigotipopago, datainfo.diaspagados, aplicacomision).then(respuesta => {
-                                    emailempeno.sendemail(Cliente, datainfo.codigosucursal, datainfo.sucnom, datainfo.boleta, datainfo.monto, data.codigo_aut, data.referencia, datainfo.fecha, CorreoPersonal, datainfo.correoelectronico);
-                                    var response = {
-                                        cliente: Reference3D,
-                                        sucod: datainfo.codigosucursal,
-                                        sucnom: datainfo.sucnom,
-                                        boleta: datainfo.boleta,
-                                        monto: datainfo.monto,
-                                        codaut: data.codigo_aut,
-                                        referencia: data.referencia
-                                    }
-                                    res.status(200).send(JSON.stringify(response));
-                                });
-                            } else {
-                                res.send("D");
-                            }
-                        });
-                    });
-                });
-            });
-        } else {
-            res.send("D");
-        }
-
-    });
-});
 /************** END PAYWORKS 2.0 **************/
 
 /************** CANCELAR PAGO ****************/

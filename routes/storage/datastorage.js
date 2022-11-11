@@ -29,11 +29,11 @@ Router.post('/api/storage/deldata', async (req, res, next) =>{
  
 Router.post('/api/storage/getdata', async (req, res, next) =>{
     const id = req.body.id?req.body.id:undefined;
-    if (!id) { return res.sendStatus(400).send({ error: 'Falta especificar el id.' }) }
+    if (!id) { return res.status(400).send({ error: 'Falta especificar el id.' }) }
     try {
         const data = await ds.GetDataStorage(id);
-        if(!data) {return res.send({ error: 'Error al obtener el dato o dato inexistente.'})}
-        return res.send({success:'Datos obtenidos con éxito.', data: {id:data.id, data:JSON.parse(data.data)}});
+        if(!data) {return res.status(401).send({ error: 'Error al obtener el dato o dato inexistente.'})}
+        return res.send({success:'Datos obtenidos con éxito.', data: {id:data.id, data: JSON.parse(data.data.replace(/·/g,'"'))}});
     } catch (error) {
         return res.send({error: error.message});
     }
