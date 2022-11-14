@@ -34,7 +34,7 @@ let Obteneridboletav1 = async function consultar(Tarjeta,Vencimiento,Ccv,Tarjeta
             if(!resul.length){
                 var request = require('request');
 
-                var url= "http://grupoalvarez.com.mx:8089/maxilanaApp/api/consultapagoaplicado/"+boleta;  
+                var url= "https://grupoalvarez.com.mx:4430/maxilanaApp/api/consultapagoaplicado/"+boleta;  
                 request(url, function (error, response, body) {
 
 
@@ -203,7 +203,7 @@ let Obteneridboletav3 = async function consultar(Tarjeta,Vencimiento,Ccv,Tarjeta
             if(!resul.length){
                 var request = require('request');
 
-                var url= "http://grupoalvarez.com.mx:8089/maxilanaApp/api/consultapagoaplicado/"+boleta;  
+                var url= "https://grupoalvarez.com.mx:4430/maxilanaApp/api/consultapagoaplicado/"+boleta;  
                 request(url, function (error, response, body) {
                     var res = JSON.parse(body);
                     res = res.data.response[0];

@@ -4,7 +4,7 @@ const libsodium = require('../webapi/libsodium/libsodium')
 const querystring = require('../node_modules/querystring');
 let obtenerventas = async function consulta(tipo, upc) {
     return new Promise(function (resolve, reject) {
-        var url = "http://grupoalvarez.com.mx:8089/maxilanaApp/api/Consultas/ventas/tipo/" + tipo + "/upc/" + upc;
+        var url = "https://grupoalvarez.com.mx:4430/maxilanaApp/api/Consultas/ventas/tipo/" + tipo + "/upc/" + upc;
         console.log(url)
         var request = require('request');
         request(url, function (error, response, body) {

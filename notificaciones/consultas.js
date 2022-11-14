@@ -4,7 +4,7 @@ const Not = require("./notificaciones");
 const sms = require('../webapi/sms/sendsms');
 let cBoletasvencidas = async function consultar(){
     return new Promise(function(resolve,reject){
-        var url= "http://grupoalvarez.com.mx:8089/maxilanaApp/api/Notificaciones/Boletasvencidas";
+        var url= "https://grupoalvarez.com.mx:4430/maxilanaApp/api/Notificaciones/Boletasvencidas";
         var request = require('request');
         request.get({
         headers: {'content-type' : 'application/x-www-form-urlencoded'},
@@ -52,7 +52,7 @@ let cBoletasvencidas = async function consultar(){
 }
 let ObtenerMensajesParaNotificar = async function consultar(){
     return new Promise(function(resolve,reject){
-        var url= "http://grupoalvarez.com.mx:8089/maxilanaApp/api/Notificaciones/sms/Boletasvencidas";
+        var url= "https://grupoalvarez.com.mx:4430/maxilanaApp/api/Notificaciones/sms/Boletasvencidas";
         var request = require('request');
         request.get({
         headers: {'content-type' : 'application/x-www-form-urlencoded'},
