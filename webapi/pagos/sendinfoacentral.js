@@ -12,7 +12,7 @@ let grabardatos = async function datos(reference, control_number, cust_req_date,
     tarjeta = tarjeta.substr(-4);
     return new Promise(function (resolve, reject) {
         var url = "api/grabarpagoreamtes/reference/" + reference + "/control_number/" + control_number + "/cust_req_date/" + cust_req_date + "/auth_req_date/" + auth_req_date + "/auth_rsp_date/" + auth_rsp_date + "/cust_rsp_date/" + cust_rsp_date + "/payw_result/" + payw_result + "/auth_result/" + auth_result + "/payw_code/" + payw_code + "/auth_code/" + auth_code + "/text/" + text + "/card_holder/" + card_holder + "/ussuing_bank/" + ussuing_bank + "/card_brand/" + card_brand + "/card_type/" + card_type + "/tarjeta/" + tarjeta + "/correoelectronico/" + correoelectronico + "/monto/" + Montototal + "/codigosucursal/" + codigosucursal + "/upc/" + upc + "/correoenviado/0/costoenvio/" + costoenvio + "/precio/" + precioneto + "/esapp/1/costoseguro/" + seguro;
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             var response = JSON.parse(body);
             var data = response.data;
             reference = reference ? reference : null;
@@ -100,7 +100,7 @@ let grabardatosremates = async function datos(reference, cust_req_date, auth_req
             url = "api/grabarpagoreamtes/reference/" + reference + "/control_number/" + control_number + "/cust_req_date/" + cust_req_date + "/auth_req_date/" + auth_req_date + "/auth_rsp_date/" + auth_rsp_date + "/cust_rsp_date/" + cust_rsp_date + "/payw_result/" + payw_result + "/auth_result/" + auth_result + "/payw_code/" + payw_code + "/auth_code/" + auth_code + "/text/" + text + "/card_holder/" + card_holder + "/ussuing_bank/" + ussuing_bank + "/card_brand/" + card_brand + "/card_type/" + card_type + "/tarjeta/" + tarjeta + "/correoelectronico/" + correo + "/monto/" + monto + "/codigosucursal/" + codigosucursal + "/upc/" + upc + "/correoenviado/0/costoenvio/" + costoenvio + "/precio/" + precioetiqueta + "/esapp/0/costoseguro/" + costoseguro;
             let query = 'insert into respuestaspw2remates(reference,control_number,cust_req_date,auth_req_date,auth_rsp_date,cust_rsp_date,payw_result,auth_result,payw_code,auth_code,text,card_holder,ussuing_bank,card_brand,card_type,tarjeta,correoelectronico,monto,codigosucursal,upc,enviado) values ' + ' (' + "'" + reference + "'" + ', ' + "'" + control_number + "'" + ', ' + "'" + cust_req_date + "'" + ', ' + "'" + auth_req_date + "'" + ', ' + "'" + auth_rsp_date + "'" + ', ' + "'" + cust_rsp_date + "'" + ', ' + "'" + payw_result + "'" + ', ' + "'" + auth_result + "'" + ', ' + "'" + payw_code + "'" + ', ' + "'" + auth_code + "'" + ', ' + "'" + text + "'" + ', ' + "'" + card_holder + "'" + ', ' + "'" + ussuing_bank + "'" + ', ' + "'" + card_brand + "'" + ', ' + "'" + card_type + "'" + ', ' + "'" + tarjeta + "'" + ', ' + "'" + correo + "'" + ', ' + "'" + monto + "'" + ',' + "'" + codigosucursal + "'" + ',' + "'" + upc + "'" + ',0)';
 
-            request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+            request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
                 cnt = cnt + 1;
                 con.connection.query(query, function (error, results, fields) {
                     let aplicarpago = 'https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia=' + reference + '&CodigoOperacion=2';
@@ -128,7 +128,7 @@ let grabardatosempenov3 = async function datos(reference, control_number, cust_r
     return new Promise(function (resolve, reject) {
         var url = "api/grabarpagoboleta/reference/" + reference + "/control_number/" + control_number + "/cust_req_date/" + cust_req_date + "/auth_req_date/" + auth_req_date + "/auth_rsp_date/" + auth_rsp_date + "/cust_rsp_date/" + cust_rsp_date + "/payw_result/" + payw_result + "/auth_result/" + auth_result + "/payw_code/" + payw_code + "/auth_code/" + auth_code + "/text/" + text + "/card_holder/" + card_holder + "/ussuing_bank/" + ussuing_bank + "/card_brand/" + card_brand + "/card_type/" + card_type + "/tarjeta/" + tarjeta + "/correoelectronico/" + correoelectronico + "/monto/" + monto + "/codigosucursal/" + codigosucursal + "/boleta/" + boleta + "/correoenviado/0/fechaConsulta/" + fechaConsulta + "/ctpago/" + codigotipopago + "/dias/" + dias + "/esapp/1/aplicacomision/" + aplicarcomision;
         console.log(url);
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             var response = JSON.parse(body);
             var data = response.data;
             reference = reference ? reference : null;
@@ -173,7 +173,7 @@ let grabardatosempeno = async function datos(reference, control_number, cust_req
     return new Promise(function (resolve, reject) {
         var url = "api/grabarpagoboleta/reference/" + reference + "/control_number/" + control_number + "/cust_req_date/" + cust_req_date + "/auth_req_date/" + auth_req_date + "/auth_rsp_date/" + auth_rsp_date + "/cust_rsp_date/" + cust_rsp_date + "/payw_result/" + payw_result + "/auth_result/" + auth_result + "/payw_code/" + payw_code + "/auth_code/" + auth_code + "/text/" + text + "/card_holder/" + card_holder + "/ussuing_bank/" + ussuing_bank + "/card_brand/" + card_brand + "/card_type/" + card_type + "/tarjeta/" + tarjeta + "/correoelectronico/" + correoelectronico + "/monto/" + monto + "/codigosucursal/" + codigosucursal + "/boleta/" + boleta + "/correoenviado/0/fechaConsulta/" + fechaConsulta + "/ctpago/" + codigotipopago + "/dias/" + dias + "/esapp/1";
         console.log(url);
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             var response = JSON.parse(body);
             var data = response.data;
             reference = reference ? reference : null;
@@ -297,7 +297,7 @@ let grabardatosempenoprueba = async function datos(reference, control_number, cu
                 if(error) return reject(error);
                 
                 url = "api/grabarpagoboleta/reference/" + reference + "/control_number/" + controlnumber + "/cust_req_date/" + cust_req_date + "/auth_req_date/" + auth_req_date + "/auth_rsp_date/" + auth_rsp_date + "/cust_rsp_date/" + cust_rsp_date + "/payw_result/" + payw_result + "/auth_result/" + auth_result + "/payw_code/" + payw_code + "/auth_code/" + auth_code + "/text/" + text + "/card_holder/" + card_holder + "/ussuing_bank/" + ussuing_bank + "/card_brand/" + card_brand + "/card_type/" + card_type + "/tarjeta/" + tarjeta + "/correoelectronico/" + correoelectronico + "/monto/" + monto + "/codigosucursal/" + codsucursal + "/boleta/" + boleta + "/correoenviado/0/fechaConsulta/" + date + "/ctpago/" + codtipopago + "/dias/" + diaspagados + "/esapp/0";;
-                request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+                request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
                     let aplicarpago = 'https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia=' + reference + '&CodigoOperacion=1';
                     request.post(aplicarpago, function (error, response, body) { 
                         console.log(body) 

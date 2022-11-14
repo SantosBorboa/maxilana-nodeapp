@@ -24,7 +24,7 @@ let sendemail = async function datos(tema,nombre,correoelectronico,ciudad,asunto
     body = body +'<tbody>';
     body = body +'<tr>';
     body = body +'<td colspan="3" style="width:100%;background-color:#003681">';
-    body = body +'<img name="m_-7870061969043156846_header_logo" src="http://grupoalvarez.com.mx:8089/MaxilanaWEB/assets/BarrasuperiorCorreo.png" border="0" alt="" class="CToWUd">';
+    body = body +'<img name="m_-7870061969043156846_header_logo" src="https://grupoalvarez.com.mx:4430/MaxilanaWEB/assets/BarrasuperiorCorreo.png" border="0" alt="" class="CToWUd">';
     body = body +'</td>';
     body = body +'</tr>';
     body = body +'</tbody>';
@@ -115,7 +115,7 @@ let sendemail = async function datos(tema,nombre,correoelectronico,ciudad,asunto
     body = body +'<tbody>';
     body = body +'<tr>';
     body = body +'<td colspan="3" style="width:100%;background-color:#003681">';
-    body = body +'<img name="m_-7870061969043156846_header_logo" src="http://grupoalvarez.com.mx:8089/MaxilanaWEB/assets/EsrLogo.png" border="0" alt="" class="CToWUd">';
+    body = body +'<img name="m_-7870061969043156846_header_logo" src="https://grupoalvarez.com.mx:4430/MaxilanaWEB/assets/EsrLogo.png" border="0" alt="" class="CToWUd">';
     body = body +'</td>';
     body = body +'</tr>';
     body = body +'</tbody>';

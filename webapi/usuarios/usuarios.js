@@ -9,7 +9,7 @@ const _sodium = require('../../node_modules/libsodium-wrappers');
 const consultarmonecero = (usuario) => {
     const url = `api/Usuarios/Monedero/${usuario}`;
     return new Promise((resolve, reject) => {
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             if(error) return reject(error);
             var response = JSON.parse(body);
             response = response.data.response[0];
@@ -28,7 +28,7 @@ const consultarmonecero = (usuario) => {
 let consultarLogin = async function consultar(celular, correo, password) {
     var url = "api/Usuarios/Cusuario/" + celular + "/Correo/" + correo + "/Contrasena/" + password;
     return new Promise(function (resolve, reject) {
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             var response = JSON.parse(body);
             response = response.data.response[0];
             response = response ? response : undefined;
@@ -47,7 +47,7 @@ let consultarLogin = async function consultar(celular, correo, password) {
 let ObtenerSaldoBoleta = async function consultar(usuario) {
     var url = "api/ConsultarBoletas/Cliente/" + usuario;
     return new Promise(function (resolve, reject) {
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             var response = JSON.parse(body);
             response = response.data.response;
             response = response ? response : undefined;
@@ -84,7 +84,7 @@ let ObtenerSaldoBoleta = async function consultar(usuario) {
 let RegistrarCliente = async function consultar(Apellidop, Apellidom, Nombre, Celular, Corre, Contrasena) {
     var url = "api/RegistroWeb/ApellidoP/" + Apellidop + "/ApellidoM/" + Apellidom + "/Nombre/" + Nombre + "/Celular/" + Celular + "/Correo/" + Corre + "/Contrasena/" + Contrasena;
     return new Promise(function (resolve, reject) {
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             var response = JSON.parse(body);
             response = response.data.response;
             response = response ? response : undefined;
@@ -102,7 +102,7 @@ let RegistrarCliente = async function consultar(Apellidop, Apellidom, Nombre, Ce
 let EditarCliente = async function consultar(Usuario, Apellidop, Apellidom, Nombre, Celular, Corre, Contrasena) {
     var url = "api/Registro/Editar/Usuario/" + Usuario + "/ApellidoP/" + Apellidop + "/ApellidoM/" + Apellidom + "/Nombre/" + Nombre + "/Celular/" + Celular + "/Correo/" + Corre + "/Contrasena/" + Contrasena;
     return new Promise(function (resolve, reject) {
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             var response = JSON.parse(body);
 
             response = response.data.response;
@@ -121,7 +121,7 @@ let EditarCliente = async function consultar(Usuario, Apellidop, Apellidom, Nomb
 let agregarboleta = async function consultar(usuario, boleta, letra, prestamo) {
     var url = "api/AgregarBoleta/Cliente/" + usuario + "/Boleta/" + boleta + "/Letra/" + letra + "/Prestamo/" + prestamo;
     return new Promise(function (resolve, reject) {
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             var response = JSON.parse(body);
             response = response.data.response;
             response = response ? response : [];
@@ -134,7 +134,7 @@ let agregarboleta = async function consultar(usuario, boleta, letra, prestamo) {
 let ObtenerCodigoRegistro = async function consultar(celular) {
     var url = "api/GenerarCodigo/Celular/" + celular;
     return new Promise(function (resolve, reject) {
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             var response = JSON.parse(body);
             response = response.data.response;
             response = response ? response : undefined;
@@ -153,7 +153,7 @@ let ObtenerCodigoRegistro = async function consultar(celular) {
 let ObtenerCodigoFgtPassword = async function consultar(celular, correo) {
     var url = "api/ForgotPassword/ConfirmarDatos/Celular/" + celular + "/Correo/" + correo;
     return new Promise(function (resolve, reject) {
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
 
             var response = JSON.parse(body);
             response = response.data.response;
@@ -174,7 +174,7 @@ let ObtenerCodigoFgtPassword = async function consultar(celular, correo) {
 let CambiarContraseña = async function consultar(usuario, contrasena) {
     var url = "api/ForgotPassword/ChangePassword/Usuario/" + usuario + "/Contrasena/" + contrasena;
     return new Promise(function (resolve, reject) {
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             let res = { response: true };
             resolve(res);
         });
@@ -208,7 +208,7 @@ const EliminarDireccion = async (usuario, direccion) => {
 const CambiarContraseñaUser = async (usuario, contrasena) =>{
     const url = `api/Usuarios/ChangePassword/CodigoUsuario/${usuario}/Password/${contrasena}`
     return new Promise(function (resolve, reject) {
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             let res = { response: true };
             resolve(res);
         });
@@ -219,7 +219,7 @@ let Validarcodigo = async function consultar(usuario, codigo, tipo) {
     var url = "api/ValidarCodigo/Usuario/" + usuario + "/Codigo/" + codigo + "/Tipo/" + tipo;
     return new Promise(function (resolve, reject) {
         console.log(url)
-        request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + url, function (error, response, body) {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
             var res = JSON.parse(body);
             res = res.data.response;
             res = res ? res : undefined;

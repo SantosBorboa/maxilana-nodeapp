@@ -37,7 +37,7 @@ let sendInfoCentral = async function consulta(celular, mensaje) {
   var url = 'api/GrabarSMS/Celular/' + celular + '/Mensaje/' + mensaje;
 
   return new Promise(function (resolve, reject) {
-    request('http://grupoalvarez.com.mx:8089/maxilanaApp/' + encodeURI(url), function (error, response, body) {
+    request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + encodeURI(url), function (error, response, body) {
       resolve(response);
 
     });

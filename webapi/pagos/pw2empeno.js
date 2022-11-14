@@ -22,7 +22,7 @@ let Obtenerdatosboletas = async function datos(referencia, eci, xid, cavv, statu
             con.connection.query(query, function (error, results, fields) {
                 if (error) { reject(error) }
                 Resultado = JSON.parse(JSON.stringify(results));
-                var url = "http://grupoalvarez.com.mx:8089/maxilanaApp/api/consultapagoaplicado/" + Resultado[0].boleta;
+                var url = "https://grupoalvarez.com.mx:4430/maxilanaApp/api/consultapagoaplicado/" + Resultado[0].boleta;
                 request(url, function (error, response, body) {
                     if (error) { reject(error) }
                     var res = JSON.parse(body);
@@ -44,7 +44,7 @@ let Obtenerdatosboletasv3 = async function datos(referencia) {
         con.connection.query(query, function (error, results, fields) {
             if (error) { reject(error) }
             Resultado = JSON.parse(JSON.stringify(results));
-            var url = "http://grupoalvarez.com.mx:8089/maxilanaApp/api/consultapagoaplicado/" + Resultado[0].boleta;
+            var url = "https://grupoalvarez.com.mx:4430/maxilanaApp/api/consultapagoaplicado/" + Resultado[0].boleta;
             request(url, function (error, response, body) {
                 if (error) { reject(error) }
                 var res = JSON.parse(body);

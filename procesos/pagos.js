@@ -8,7 +8,7 @@ let ejecutarprocesodepagos = async function consulta(){
     console.log("ENTRO ejecutarprocesodepagos");
     return new Promise(function(resolve,reject){
         
-        var url= "http://grupoalvarez.com.mx:8089/maxilanaApp/api/pagospendientes";
+        var url= "https://grupoalvarez.com.mx:4430/maxilanaApp/api/pagospendientes";
         const request = require('request');
         request(url, function (error, response, body) {
             ResultadoSQL = JSON.parse(response.body);
@@ -57,7 +57,7 @@ let ejecutarprocesodepagos = async function consulta(){
                     pagoapp = datosdeenvio[i].pagoapp ? datosdeenvio[i].pagoapp : "0";
                     console.log(datosdeenvio)
                         var url="api/grabarpagoboleta/reference/"+reference+"/control_number/"+control_number+"/cust_req_date/"+cust_req_date+"/auth_req_date/"+auth_req_date+"/auth_rsp_date/"+auth_rsp_date+"/cust_rsp_date/"+cust_rsp_date+"/payw_result/"+payw_result+"/auth_result/"+auth_result+"/payw_code/"+payw_code+"/auth_code/"+auth_code+"/text/"+text+"/card_holder/"+card_holder+"/ussuing_bank/"+ussuing_bank+"/card_brand/"+card_brand+"/card_type/"+card_type+"/tarjeta/"+tarjeta+"/correoelectronico/"+correoelectronico+"/monto/"+monto+"/codigosucursal/"+codigosucursal+"/boleta/"+boleta+"/correoenviado/0/fechaConsulta/"+fechaConsulta+"/ctpago/"+codigotipopago+"/dias/"+dias+"/esapp/"+pagoapp;
-                        request('http://grupoalvarez.com.mx:8089/maxilanaApp/'+url, function (error, response, body) {
+                        request('https://grupoalvarez.com.mx:4430/maxilanaApp/'+url, function (error, response, body) {
                             var response = JSON.parse(body);
                             let aplicarpago ='https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia='+reference+'&CodigoOperacion=1';
                             request.post(aplicarpago,function(error,response,body){console.log(body)});
@@ -76,7 +76,7 @@ let ejecutarprocesodepagospp = async function consulta(){
 
     return new Promise(function(resolve,reject){
         
-        var url= "http://grupoalvarez.com.mx:8089/maxilanaApp/api/pagospendientes/pp";
+        var url= "https://grupoalvarez.com.mx:4430/maxilanaApp/api/pagospendientes/pp";
         var request = require('request');
         request(url, function (error, response, body) {
             ResultadoSQL = JSON.parse(response.body);
@@ -154,7 +154,7 @@ let ejecutarpagomultipleapp = async function consulta(referencia){
                     codigotipopago=  datosdeenvio[i].codigotipopago ?  datosdeenvio[i].codigotipopago : "1";
                     pagoapp = datosdeenvio[i].pagoapp ? datosdeenvio[i].pagoapp : "0";
                         var url="api/grabarpagoboleta/reference/"+reference+"/control_number/"+control_number+"/cust_req_date/"+cust_req_date+"/auth_req_date/"+auth_req_date+"/auth_rsp_date/"+auth_rsp_date+"/cust_rsp_date/"+cust_rsp_date+"/payw_result/"+payw_result+"/auth_result/"+auth_result+"/payw_code/"+payw_code+"/auth_code/"+auth_code+"/text/"+text+"/card_holder/"+card_holder+"/ussuing_bank/"+ussuing_bank+"/card_brand/"+card_brand+"/card_type/"+card_type+"/tarjeta/"+tarjeta+"/correoelectronico/"+correoelectronico+"/monto/"+monto+"/codigosucursal/"+codigosucursal+"/boleta/"+boleta+"/correoenviado/0/fechaConsulta/"+date+"/ctpago/"+codigotipopago+"/dias/"+dias+"/esapp/"+pagoapp;
-                        request('http://grupoalvarez.com.mx:8089/maxilanaApp/'+url, function (error, response, body) {
+                        request('https://grupoalvarez.com.mx:4430/maxilanaApp/'+url, function (error, response, body) {
                             console.log(response.body);
                             // let aplicarpago ='https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia='+reference+'&CodigoOperacion=1';
                             // request.post(aplicarpago,function(error,response,body){console.log(body)});
