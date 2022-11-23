@@ -18,7 +18,14 @@ let Obtenerpagos = async function consulta(boleta,codauth,ref){
 }
 let obtenerinfo3d = async function consulta(Referencia){
     return new Promise(function(resolve,reject){
-    let sql='SELECT upc,monto,info.eci,info.xid,info.cavv,info.status,info.cardtype,info.pagoapp,fecha FROM `informacionTransaccionVentas` i inner join informacion3dsecure info on idPrincipal=info.reference or id=info.reference where id='+"'"+Referencia+"'";
+    const sql = `
+    SELECT upc,monto,info.eci,info.xid,info.cavv,info.status,
+    info.cardtype,info.pagoapp,fecha 
+    FROM informacionTransaccionVentas i 
+    inner join informacion3dsecure info on idPrincipal=info.reference or id=info.reference 
+    where id='${Referencia}'
+    `
+    //let sql='SELECT upc,monto,info.eci,info.xid,info.cavv,info.status,info.cardtype,info.pagoapp,fecha FROM `informacionTransaccionVentas` i inner join informacion3dsecure info on idPrincipal=info.reference or id=info.reference where id='+"'"+Referencia+"'";
 
     con.connection.query(sql, function (error, results, fields) {
         if(results != undefined){

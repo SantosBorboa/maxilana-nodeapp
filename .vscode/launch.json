@@ -16,7 +16,7 @@
                 "<node_internals>/**"
             ],
             "type": "node",
-            "console": "externalTerminal",
+            "console": "internalConsole",
         },
         {
             "name": "Attach to Chrome",
