@@ -89,6 +89,21 @@ let ObtenerdatosboletasPrueba = async function datos(referencia, eci, xid, cavv,
                 });
             });
         } else {
+            const kk = `
+            SELECT i.id,i.idPrincipal,i.monto,i.tarjeta,i.vencimiento,
+            i.cvv2 as ccv2, i.correoelectronico, i.codigosucursal, 
+            i.boleta,p.correoelectronicoparanotificacion,
+            inf.cardtype,inf.status,inf.cavv,inf.xid,inf.eci,
+            s.nombre as sucnom,i.fecha,i.codigotipopago,
+            s.correoelectronico as correosucursal, i.fechaconsulta,
+            i.diaspagados 
+            FROM informacionpw2 i 
+            inner join informacion3dsecure inf on inf.reference=i.idPrincipal 
+            inner join sucursales s on s.numero = i.codigosucursal 
+            inner join ciudades c on c.id=s.ciudad 
+            inner join plazas p on p.codigo=c.codigoplaza 
+            where i.boleta like '${referencia}%'`
+            
             let query = 'SELECT i.id,i.idPrincipal,i.monto,i.tarjeta,i.vencimiento,i.cvv2 as ccv2, i.correoelectronico, i.codigosucursal, i.boleta,p.correoelectronicoparanotificacion,inf.cardtype,inf.status,inf.cavv,inf.xid,inf.eci,s.nombre as sucnom,i.fecha,i.codigotipopago,s.correoelectronico as correosucursal, i.fechaconsulta,i.diaspagados FROM `informacionpw2` i inner join informacion3dsecure inf on inf.reference=i.idPrincipal inner join sucursales s on s.numero = i.codigosucursal inner join ciudades c on c.id=s.ciudad inner join plazas p on p.codigo=c.codigoplaza where inf.reference=' + "'" + referencia + "'";
             con.connection.query(query, function (error, results, fields) {
                 if (error) { reject(error) }

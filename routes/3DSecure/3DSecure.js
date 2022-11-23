@@ -106,7 +106,6 @@ const guardarErrores3dSecureRemates = ({
     })
 }
 
-
 Router.post('/api/card/checkcreditcard', (req, res, next) => {
     const card = req.body.card ? req.body.card : undefined;
     if (card) {

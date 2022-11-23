@@ -3,7 +3,6 @@ const querystring = require('../../node_modules/querystring');
 const soap = require("../../node_modules/soap");
 let consultarlineadecredito = async function consultar(codigo,contrasena){
     return new Promise(function(resolve,rejec){
-
         var url= "http://intranet.maxilana.com/wsprestamos/serviciosprestamos.asmx?WSDL"
         const args = {
             strCodigoDistribuidor : codigo,

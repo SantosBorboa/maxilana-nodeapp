@@ -7,6 +7,18 @@ let Obtenertodo = async function consultar(categoria, query, sucursal, ciudades,
     vtalinea = vtalinea ? vtalinea : undefined;
     let ordenar = '';
     let rangodeprecios = '';
+    const queryCantidad = `select count(r.codigo) as conteo 
+    from remates r , 
+    sucursales s, 
+    ciudades c, 
+    tipos t, 
+    catdescuentosadicionales cd 
+    where s.numero = r.sucursal 
+    and c.id = s.ciudad 
+    and t.id = r.tipo 
+    and cd.tipo=r.tipo 
+    and r.codigo not in(select codigo from articulodelmesapp) `
+
     const selectinicial = `
         select r.codigo,r.tipo as idcategoria,t.slug as slugcategoria,
         t.nombre as nombrecategoria,
@@ -35,7 +47,6 @@ let Obtenertodo = async function consultar(categoria, query, sucursal, ciudades,
         and cd.tipo=r.tipo 
         and r.codigo not in(select codigo from articulodelmesapp) 
     `
-    //let selectinicial = 'select r.codigo,r.tipo as idcategoria,t.slug as slugcategoria,t.nombre as nombrecategoria,CASE WHEN r.tipo =10 THEN CONCAT(r.marca," ",r.nombre) WHEN r.tipo=54 THEN CONCAT(r.nombre) WHEN r.tipo=57 THEN CONCAT(r.nombre," ",r.marca) ELSE r.nombre end as nombre,r.sucursal as idsucursal,s.nombre as nombresucursal,s.slug as slugsucursal, c.id as idciudad,c.nombre as ciudadnombre,c.slug as slugciudad, r.precio,r.precioneto,r.marca,r.observaciones,r.imagen,r.imagen,r.precod,r.ventalinea,cd.costo as descuento, cd.descuentoapp + (r.descuentoadicionalapp*100) as descuentoapp,cd.aplicardescuentoapp,cd.descuentoweb + (r.descuentoadicionalweb*100) as descuentoweb,cd.aplicardescuentoweb, UNIX_TIMESTAMP(r.fechaimagen) as fechaimagen from remates r , sucursales s, ciudades c, tipos t, catdescuentosadicionales cd where s.numero = r.sucursal and c.id = s.ciudad and t.id = r.tipo and cd.tipo=r.tipo and r.codigo not in(select codigo from articulodelmesapp)'
     if (max !== undefined) {
         rangodeprecios = rangodeprecios + " and r.precioneto <=" + max;
     }
@@ -83,73 +94,98 @@ let Obtenertodo = async function consultar(categoria, query, sucursal, ciudades,
     if (vtalinea !== undefined) {
         consulta = consulta + " and r.ventalinea=" + vtalinea;
     }
-    consulta = selectinicial + consulta + rangodeprecios + ordenar;
     //console.log(consulta);
     return new Promise(function (resolve, reject) {
         let query = consulta;
         //  query = query.replace("r.codigo,r.tipo as idcategoria,t.slug as slugcategoria,t.nombre as nombrecategoria,r.nombre,r.sucursal as idsucursal,s.nombre as nombresucursal,s.slug as slugsucursal, c.id as idciudad,c.nombre as ciudadnombre,c.slug as slugciudad, r.precio,r.precioneto,r.marca,r.observaciones,r.imagen,r.imagen,r.precod,r.ventalinea,cd.costo as descuento"," COUNT(*) as Total ");  
-        con.connection.query(query, function (error, results, fields) {
-            if (error) { return reject(error) }
-            if (results.length > 0) {
-                const Resultadogeneral = JSON.parse(JSON.stringify(results));
-                var totalarticulos = Resultadogeneral.length;
-                var porpagina = limits;
-                var pagina = page;
-                var paginas = Math.ceil(totalarticulos / porpagina);
-                var next = false;
-                var prev = false;
-                var limit = '';
-                var limiteinicial = (pagina - 1) * porpagina;
-                limit = limiteinicial + "," + porpagina;
-                if (pagina > 1) {
-                    if (paginas > pagina) {
-                        next = true;
-                        prev = true;
+        const con = cnn.createConnection(configMaxilanaDB);
+        con.connect(errorconnect => {
+            if (errorconnect) { return reject(errorconnect) };
+            const consultaCantidad = queryCantidad + consulta + rangodeprecios + ordenar;
+            consulta = selectinicial + consulta + rangodeprecios + ordenar;
+            con.query(consultaCantidad, function (error, results, fields) {
+                if (error) {
+                    con.end((errend) => {
+                        if (errend) return reject({errend,error})
+                        return reject(error)
+                    })
+                }else {
+                    if (results && results.length > 0) {
+                        const Resultadogeneral = JSON.parse(JSON.stringify(results));
+                        var totalarticulos = Resultadogeneral[0].conteo;
+                        var porpagina = limits;
+                        var pagina = page;
+                        var paginas = Math.ceil(totalarticulos / porpagina);
+                        var next = false;
+                        var prev = false;
+                        var limit = '';
+                        var limiteinicial = (pagina - 1) * porpagina;
+                        limit = limiteinicial + "," + porpagina;
+                        if (pagina > 1) {
+                            if (paginas > pagina) {
+                                next = true;
+                                prev = true;
+                            } else {
+                                next = false;
+                                prev = true;
+                            }
+                        } else {
+                            if (paginas > pagina) {
+                                next = true;
+                                prev = false;
+                            } else {
+                                next = false;
+                                prev = false;
+                            }
+                        }
+                        const consultaPrincipal = consulta + " limit " + limit;
+                        con.query(consultaPrincipal, function (error, results, fields) {
+                            if (error) {
+                                con.end(errend => {
+                                    if (errend) return reject({errend,error})
+                                    return reject(error)
+                                });
+                            }else{
+                                if (results != undefined) {
+                                    const Resultado = JSON.parse(JSON.stringify(results));
+
+                                    let respons = {
+                                        pages: paginas,
+                                        next: next,
+                                        prev: prev,
+                                        limit: porpagina,
+                                        count: totalarticulos,
+                                        rows: Resultado
+                                    };
+                                    con.end(errend => {
+                                        if (errend) return reject({errend})
+                                        return resolve(Object.assign({}, respons));
+                                    });
+                                } else {
+                                    con.end(errend => {
+                                        if (errend) return reject({errend})
+                                        resolve("No hay información para mostrar.")
+                                    });
+                                }
+                            }
+                        });
                     } else {
-                        next = false;
-                        prev = true;
-                    }
-                } else {
-                    if (paginas > pagina) {
-                        next = true;
-                        prev = false;
-                    } else {
-                        next = false;
-                        prev = false;
+                        let respons = {
+                            pages: 0,
+                            next: false,
+                            prev: 0,
+                            limit: porpagina,
+                            count: 0,
+                            rows: []//Resultado
+                        };
+                        con.end(errend => {
+                            if (errend) return reject({errend})
+                            resolve(Object.assign({}, respons));
+                        });
                     }
                 }
-                let query2 = consulta + " limit " + limit;
-                con.connection.query(query2, function (error, results, fields) {
-                    if (results != undefined) {
-                        const Resultado = JSON.parse(JSON.stringify(results));
-
-                        let respons = {
-                            pages: paginas,
-                            next: next,
-                            prev: prev,
-                            limit: porpagina,
-                            count: totalarticulos,
-                            rows: Resultado
-                        };
-
-                        resolve(Object.assign({}, respons));
-                    }
-                    else {
-                        resolve("No hay información para mostrar.")
-                    }
-                });
-            } else {
-                let respons = {
-                    pages: 0,
-                    next: false,
-                    prev: 0,
-                    limit: porpagina,
-                    count: 0,
-                    rows: []//Resultado
-                };
-                resolve(Object.assign({}, respons));
-            }
-        });
+            })
+        })
     });
 }
 
@@ -328,30 +364,35 @@ let Obtenerarticulosid = async function consultar(items) {
         const conn = cnn.createConnection(configMaxilanaDB);
         conn.connect((error) => {
             conn.query(query, function (error, results, fields) {
-                if (results.length > 0) {
-                    const Resultado = JSON.parse(JSON.stringify(results));
-                    // if(Resultado[0].ventalinea == "1"){
-                    // var PrecioNeto = Resultado[0].precioneto;
-                    // var Descuento  = Resultado[0].descuento;
-                    // Descuento = parseFloat(100-Descuento);
-                    // var Subdescuento = (parseFloat(PrecioNeto)*(Descuento/100));
-                    // Subdescuento = Subdescuento.toFixed(2);
-                    // Resultado[0].precioneto = parseFloat(Subdescuento);
-                    // }
-                    resolve(Resultado[0]);
+                conn.end(endError => {
+                    if (error) { reject(error) }
 
-                } else {
-                    resolve("No hay información para mostrar.")
-                }
+                    if (results.length > 0) {
+                        const Resultado = JSON.parse(JSON.stringify(results));
+                        // if(Resultado[0].ventalinea == "1"){
+                        // var PrecioNeto = Resultado[0].precioneto;
+                        // var Descuento  = Resultado[0].descuento;
+                        // Descuento = parseFloat(100-Descuento);
+                        // var Subdescuento = (parseFloat(PrecioNeto)*(Descuento/100));
+                        // Subdescuento = Subdescuento.toFixed(2);
+                        // Resultado[0].precioneto = parseFloat(Subdescuento);
+                        // }
+                        resolve(Resultado[0]);
+
+                    } else {
+                        return reject(new Error('No hay información para mostrar'))
+                    }
+                })
             });
         });
 
     });
 }
-let Obtenerarticulosidprecio = async function consultar(items) {
+const Obtenerarticulosidprecio = async (items) => {
     let consulta = '';
     const selectinicial = `
-        select  r.precio,r.precioneto,cd.costo as descuento 
+        select  r.precio,r.precioneto,
+        case when r.descuentoadicionalweb > 0 then  r.descuentoadicionalweb else cd.costo end as descuento
         from remates r , 
         sucursales s, 
         ciudades c, 
@@ -392,57 +433,63 @@ let Obtenertipos = async function consultar() {
         })
     });
 }
-let Obtenerporcategoriaapp = async function consultar(categoria, query, sucursal, ciudades, categoria_or, query_or, sucursal_or, ciudades_or, orden, min, max, vtalinea, page, limits, codigo) {
-    let arr = [];
-    let Categorias = [2, 3, 1, 60, 55, 54];
-    return new Promise(function (resolve, reject) {
-        for (var i = 0; i < Categorias.length; i++) {
-            let selectinicial = `
-                select r.codigo,r.tipo as idcategoria,t.slug as slugcategoria,
-                CONCAT(UPPER(SUBSTRING(t.nombre,1,1)),
-                LOWER(SUBSTRING(t.nombre,2))) as nombrecategoria,
-                CASE WHEN r.tipo =10 THEN CONCAT(r.marca," ",r.nombre) 
-                    WHEN r.tipo=54 THEN CONCAT(r.nombre) 
-                    WHEN r.tipo=57 THEN CONCAT(r.nombre," ",r.marca) 
-                    ELSE r.nombre end as nombre,
-                r.sucursal as idsucursal,s.nombre as nombresucursal,s.slug as slugsucursal, 
-                c.id as idciudad,c.nombre as ciudadnombre,c.slug as slugciudad, 
-                r.precio,r.precioneto,r.marca,r.observaciones,r.imagen,r.imagen,r.precod,r.ventalinea,
-                case when r.descuentoadicionalapp > 0 OR r.descuentoadicionalweb > 0 then  0 else cd.costo end as descuento,  
-                case when r.descuentoadicionalapp > 0 then r.descuentoadicionalapp ELSE cd.descuentoapp END as descuentoapp, 
-                case when r.descuentoadicionalapp > 0 or r.descuentoadicionalweb > 0 then  1 ELSE 0 end as aplicardescuentoapp, 
-                case when r.descuentoadicionalweb > 0 then r.descuentoadicionalweb ELSE cd.descuentoweb END as descuentoweb, 
-                case when r.descuentoadicionalweb > 0 or r.descuentoadicionalapp > 0 then 1 ELSE 0 end as aplicardescuentoweb,         
-                UNIX_TIMESTAMP(r.fechaimagen) as fechaimagen 
-                from remates r , 
-                sucursales s, 
-                ciudades c, 
-                tipos t, 
-                catdescuentosadicionales cd 
-                where s.numero = r.sucursal 
-                and c.id = s.ciudad 
-                and t.id = r.tipo 
-                and cd.tipo=r.tipo
-            `
-            const ordenar = " order BY RAND()";
-            const consulta = " and r.tipo in(" + Categorias[i] + ") and r.ventalinea=1"
-            const limit = " LIMIT 10"
-            const query = selectinicial + consulta + ordenar + limit;
-            con.connection.query(query, function (error, results, fields) {
-                const Resultado = JSON.parse(JSON.stringify(results));
-                arr.push({
-                    nombrecategoria: Resultado[0].nombrecategoria,
-                    idcategoria: Resultado[0].idcategoria,
-                    rows: Resultado
+const Obtenerporcategoriaapp = async ({ ...args }) => {
+    const Categorias = [2, 3, 1, 60, 55, 54];
+    const inCategorias = Categorias.join(',');
+    return new Promise((resolve, reject) => {
+        const selectinicial = `
+        select r.codigo,r.tipo as idcategoria,t.slug as slugcategoria,
+        CONCAT(UPPER(SUBSTRING(t.nombre,1,1)),
+        LOWER(SUBSTRING(t.nombre,2))) as nombrecategoria,
+        CASE WHEN r.tipo =10 THEN CONCAT(r.marca," ",r.nombre) 
+            WHEN r.tipo=54 THEN CONCAT(r.nombre) 
+            WHEN r.tipo=57 THEN CONCAT(r.nombre," ",r.marca) 
+            ELSE r.nombre end as nombre,
+        r.sucursal as idsucursal,s.nombre as nombresucursal,s.slug as slugsucursal, 
+        c.id as idciudad,c.nombre as ciudadnombre,c.slug as slugciudad, 
+        r.precio,r.precioneto,r.marca,r.observaciones,r.imagen,r.imagen,r.precod,r.ventalinea,
+        case when r.descuentoadicionalapp > 0 OR r.descuentoadicionalweb > 0 then  0 else cd.costo end as descuento,  
+        case when r.descuentoadicionalapp > 0 then r.descuentoadicionalapp ELSE cd.descuentoapp END as descuentoapp, 
+        case when r.descuentoadicionalapp > 0 or r.descuentoadicionalweb > 0 then  1 ELSE 0 end as aplicardescuentoapp, 
+        case when r.descuentoadicionalweb > 0 then r.descuentoadicionalweb ELSE cd.descuentoweb END as descuentoweb, 
+        case when r.descuentoadicionalweb > 0 or r.descuentoadicionalapp > 0 then 1 ELSE 0 end as aplicardescuentoweb,         
+        UNIX_TIMESTAMP(r.fechaimagen) as fechaimagen 
+        from remates r , 
+        sucursales s, 
+        ciudades c, 
+        tipos t, 
+        catdescuentosadicionales cd 
+        where s.numero = r.sucursal 
+        and c.id = s.ciudad 
+        and t.id = r.tipo 
+        and cd.tipo=r.tipo
+    `
+        const ordenar = " order BY RAND()";
+        const consulta = " and r.tipo in(" + inCategorias + ") and r.ventalinea=1"
+        const limit = " LIMIT 10"
+        const query = selectinicial + consulta + ordenar //+ limit;
+
+        const conexionMySql = cnn.createConnection(configMaxilanaDB);
+        conexionMySql.connect(errConnect => {
+            if (errConnect) { return reject(errConnect) }
+            conexionMySql.query(query, (errorQuery, results, fields) => {
+                conexionMySql.end(errend => {
+                    if (errend) { return reject(errend) }
+                    if (errorQuery) { return reject(errorQuery) }
+                    const Resultado = JSON.parse(JSON.stringify(results));
+                    let arr = [];
+                    const arrResponse = Resultado.map((element) => {
+                        const o = {
+                            nombrecategoria: element.nombrecategoria,
+                            idcategoria: element.idcategoria,
+                            rows: Resultado.filter((el) => { return el.idcategoria == element.idcategoria })
+                        }
+                        if (!arr.find((el) => el.idcategoria == o.idcategoria)) { arr.push(o) }
+                    })
+                    return resolve(arr)
                 })
-                if (i == Categorias.length && arr.length == Categorias.length) {
-                    resolve(arr)
-                }
             })
-
-
-        }
-
+        })
     });
 }
 module.exports = {
