@@ -44,7 +44,7 @@ let Obtenercarrito = async function consultar(orden){
     return new Promise(function(resolve,reject){
         let query = consulta;
             con.connection.query(query, function (error, results, fields) {
-                if(results.length>0){
+                if(results && results.length>0){
 
                 let body = JSON.parse(results[0]['contenido']);
                 let upcs = '';
@@ -173,7 +173,7 @@ let Obtenercarritoventas = async function consultar(orden){
     return new Promise(function(resolve,reject){
         let query = consulta;
             con.connection.query(query, function (error, results, fields) {
-                if(results.length>0){
+                if(results && results.length>0){
 
                 let body = JSON.parse(results[0]['contenido']);
                 let upcs = '';

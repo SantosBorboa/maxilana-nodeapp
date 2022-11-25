@@ -93,13 +93,13 @@ let RegistrarCliente = async function consultar(Apellidop, Apellidom, Nombre, Ce
             } else {
                 let error = {
                 }
-                resolve(error);
+                reject(error);
             }
         });
     });
 }
 
-let EditarCliente = async function consultar(Usuario, Apellidop, Apellidom, Nombre, Celular, Corre, Contrasena) {
+const EditarCliente = async function consultar(Usuario, Apellidop, Apellidom, Nombre, Celular, Corre, Contrasena) {
     var url = "api/Registro/Editar/Usuario/" + Usuario + "/ApellidoP/" + Apellidop + "/ApellidoM/" + Apellidom + "/Nombre/" + Nombre + "/Celular/" + Celular + "/Correo/" + Corre + "/Contrasena/" + Contrasena;
     return new Promise(function (resolve, reject) {
         request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
@@ -112,7 +112,7 @@ let EditarCliente = async function consultar(Usuario, Apellidop, Apellidom, Nomb
             } else {
                 let error = {
                 }
-                resolve(error);
+                reject(error);
             }
         });
     });

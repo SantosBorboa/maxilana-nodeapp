@@ -563,12 +563,6 @@ Router.post('/api/pagos/3dsecure/rechazos', async (req, res, next) => {
     } catch (error) {
         return  res.send({error: error.message, status: '401'})
     }
-})
-Router.post('/api/tt', () => {
-    return res.send('')
-})
-
-
-// VERSION 1.0 DEL 3DSECURE 
+});
 
 module.exports = Router;

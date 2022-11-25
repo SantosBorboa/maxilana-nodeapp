@@ -3,19 +3,19 @@ const Router = express.Router();
 const users = require('../../webapi/usuarios/usuarios');
 
 Router.post('/api/usuarios/eliminar', (req, res, next) => {
-    const usuario = req.body.usuario ? req.body.usuario : undefined;
+    const { usuario } = req.body;
     if(!usuario) return res.send({error: 'No se ha especificado el usuario a eliminar.'})
     return res.send({error:'Próximamente.'})
-})
+});
 Router.post('/api/security/login', (req, res, next) => {
     return res.send({error: 'no hay nada'})
 });
 Router.post('/api/usuarios/login', (req, res) => {
-    const { usuario, password } = req.body
-    if (usuario !== undefined & password !== undefined) {
+    const { user, password } = req.body
+    if (user !== undefined & password !== undefined) {
         const regex = /^[0-9]*$/;
-        const correo = regex.test(usuario)?'NoCorreo':usuario;
-        const celular = regex.test(usuario)?usuario:0;
+        const correo = regex.test(user)?'NoCorreo':user;
+        const celular = regex.test(user)?user:0;
         users.consultarLogin(celular, correo, password).then(respuesta => {
             if(respuesta.error){return res.send(respuesta.error)}
             const objResp = {
@@ -29,8 +29,7 @@ Router.post('/api/usuarios/login', (req, res) => {
     } else {
         return res.send({error:'Favor de validar la información enviada.'})
     }
-})
-
+});
 Router.post('/api/usuarios/registro',  (req, res) => {
     let Apellidop = req.body.Apellidop ? req.body.Apellidop : undefined;
     let Apellidom = req.body.Apellidom ? req.body.Apellidom : undefined;
@@ -40,20 +39,16 @@ Router.post('/api/usuarios/registro',  (req, res) => {
     let Contrasena = req.body.Contrasena ? req.body.Contrasena : undefined;
 
     users.RegistrarCliente(Apellidop, Apellidom, Nombre, Celular, Correo, Contrasena).then(respuesta => {
-        res.send(respuesta);
-    });
+        return res.send(respuesta);
+    }).catch(error => {return res.send(error)});
 })
 Router.post('/api/usuarios/editarperfil',  (req, res) => {
-    let Apellidop = req.body.Apellidop ? req.body.Apellidop : undefined;
-    let Apellidom = req.body.Apellidom ? req.body.Apellidom : undefined;
-    let Nombre = req.body.Nombre ? req.body.Nombre : undefined;
-    let Celular = req.body.Celular ? req.body.Celular : undefined;
-    let Correo = req.body.Correo ? req.body.Correo : undefined;
-    let Contrasena = req.body.Contrasena ? req.body.Contrasena : undefined;
-    let Usuario = req.body.Usuario ? req.body.Usuario : undefined;
-    users.EditarCliente(Usuario, Apellidop, Apellidom, Nombre, Celular, Correo, Contrasena).then(respuesta => {
-        res.send(respuesta);
-    });
+    const {  Apellidop, Apellidom, Nombre, Celular, Correo, Contrasena, Usuario } = req.body
+    users.EditarCliente(Usuario, Apellidop, Apellidom, Nombre, Celular, Correo, Contrasena)
+    .then(respuesta => {
+        return res.send(respuesta);
+    })
+    .catch(error => {return res.send(error)});
 })
 Router.post('/api/usuarios/agregarboleta',  (req, res) => {
     let usuario = req.body.usuario ? req.body.usuario : undefined;

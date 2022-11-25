@@ -5,12 +5,11 @@ const jwt = require('jsonwebtoken');
 const con = require("../../db/conexion");
 const vtas = require('../../consola/ventas')
 const cnn = require('mysql');
-const { ChannelCredentials } = require('google-gax');
 const { configMaxilanaDB } = require('../../db/config')
 
 Router.post('/api/pagos/cancelaciones', async (req, res, next) => {
     const reference = req.body.reference ? req.body.reference : undefined;
-    const user = req.autorization?.user ? req.autorization?.user : '';
+    const user = req.authorization? req.authorization.user? req.authorization?.user : '':'';
 
     if (!reference) { return res.send({ error: 'La referencia no puede ser nula ni vacía.' }); }
 
