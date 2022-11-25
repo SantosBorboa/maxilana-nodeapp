@@ -1,6 +1,28 @@
 const jwt = require('jsonwebtoken');
 const jwtConf = require('../config/general');
+const fs = require('fs');
+const path = require('path');
 
+const Logger = (req, res, next) => {
+    if(rutasRequeridas(req.originalUrl)){ return next() }
+    const date = new Date()
+    const fileName = `../Logs/${date.getFullYear()}${date.getMonth()}${date.getDay()}.log`
+    const pathFile = path.join(__dirname,fileName)
+    const o = {
+        hora: date.toLocaleTimeString(),
+        address: res.connection.remoteAddress,
+        port: res.connection.remotePort,
+        family: res.connection.remoteFamily,
+        url: req.originalUrl,
+        body: req.body,
+        headers: req.headers,
+        query: req.query,
+    };  
+    fs.appendFile(pathFile, `${JSON.stringify(o)}\n`, (error)=>{
+        if(error){console.log(error)}
+    });
+    return next();
+}
 const SecureEntry = (req, res, next) =>{
     const verificarRuta = rutasRequeridas(req.originalUrl);
     if (verificarRuta) {
@@ -24,6 +46,12 @@ const SecureEntry = (req, res, next) =>{
                 if (dt > dt2) { 
                     return res.status(401).send({ error: 'El token de autorización ha expirado.' 
                 })};
+
+                const adminuser = dataToken.user == '@adminMaxilana2022@'? 'admin':undefined;
+                req.authorization = { 
+                    user: adminuser?adminuser:dataToken.user, 
+                    loggedIn: true,
+                }
 
                 return next();
             })
@@ -53,10 +81,14 @@ const usuariosValidos = (usuario) => {
 const rutasRequeridas = (ruta) => {
     const xr = `${ruta}***`
     const rutas = `
+    /api***
     /api/pagos/2dsecure/vales***
     /api/pagos/2dsecure/web/producto***
     /api/pagos/cancelaciones***
     `;
+    // const rutas = `
+    // /api/security/gettoken***
+    // `
     if (rutas.includes(xr)) {
         return true;
     } else {
@@ -64,5 +96,6 @@ const rutasRequeridas = (ruta) => {
     }
 }
 module.exports = {
-    SecureEntry
+    SecureEntry,
+    Logger,
 }
