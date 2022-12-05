@@ -5,14 +5,19 @@ const request = require("request");
 const soap = require("../../node_modules/soap");
 const libsodium = require("../../webapi/libsodium/libsodium");
 const _sodium = require('../../node_modules/libsodium-wrappers');
+
+const Logger = require('../../Middlewares/logger.js');
+
 const conexion = con.sqlconnection;
-let grabardatos = async function datos(reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, correoelectronico, monto, codigosucursal, upc, costoenvio, precioneto, seguro, clickcollect) {
+const grabardatos = async (reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, correoelectronico, monto, codigosucursal, upc, costoenvio, precioneto, seguro, clickcollect)  => {
     var Montototal = (parseFloat(monto) - parseFloat(costoenvio));
     Montototal = (parseFloat(Montototal) - parseFloat(seguro))
     tarjeta = tarjeta.substr(-4);
     return new Promise(function (resolve, reject) {
         var url = "api/grabarpagoreamtes/reference/" + reference + "/control_number/" + control_number + "/cust_req_date/" + cust_req_date + "/auth_req_date/" + auth_req_date + "/auth_rsp_date/" + auth_rsp_date + "/cust_rsp_date/" + cust_rsp_date + "/payw_result/" + payw_result + "/auth_result/" + auth_result + "/payw_code/" + payw_code + "/auth_code/" + auth_code + "/text/" + text + "/card_holder/" + card_holder + "/ussuing_bank/" + ussuing_bank + "/card_brand/" + card_brand + "/card_type/" + card_type + "/tarjeta/" + tarjeta + "/correoelectronico/" + correoelectronico + "/monto/" + Montototal + "/codigosucursal/" + codigosucursal + "/upc/" + upc + "/correoenviado/0/costoenvio/" + costoenvio + "/precio/" + precioneto + "/esapp/1/costoseguro/" + seguro;
         request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
+            if(error) { Logger('ErrorLog', 'GrabarPagoRemates PHP', {url})}
+            Logger('PagosRemates', 'GrabarPagoRemates PHP OK', {url})
             var response = JSON.parse(body);
             var data = response.data;
             reference = reference ? reference : null;
@@ -38,25 +43,28 @@ let grabardatos = async function datos(reference, control_number, cust_req_date,
             let query = 'insert into respuestaspw2remates(reference,control_number,cust_req_date,auth_req_date,auth_rsp_date,cust_rsp_date,payw_result,auth_result,payw_code,auth_code,text,card_holder,ussuing_bank,card_brand,card_type,tarjeta,correoelectronico,monto,codigosucursal,upc,enviado) values ' +
                 '(' + "'" + reference + "'" + ', ' + "'" + control_number + "'" + ', ' + "'" + cust_req_date + "'" + ', ' + "'" + auth_req_date + "'" + ', ' + "'" + auth_rsp_date + "'" + ', ' + "'" + cust_rsp_date + "'" + ', ' + "'" + payw_result + "'" + ', ' + "'" + auth_result + "'" + ', ' + "'" + payw_code + "'" + ', ' + "'" + auth_code + "'" + ', ' + "'" + text + "'" + ', ' + "'" + card_holder + "'" + ', ' + "'" + ussuing_bank + "'" + ', ' + "'" + card_brand + "'" + ', ' + "'" + card_type + "'" + ', ' + "'" + tarjeta + "'" + ', ' + "'" + correoelectronico + "'" + ', ' + "'" + monto + "'" + ',' + "'" + codigosucursal + "'" + ',' + "'" + upc + "'" + ',0)';
             con.connection.query(query, function (error, results, fields) {
+                if(error) { Logger('ErrorLog', 'insert respuestaspw2', {query})}
+                Logger('PagosRemates', 'insert respuestaspw2 OK', {query})
                 let query3 = 'SELECT * FROM articulodelmesapp WHERE codigo=' + "'" + upc + "'";
-                con.connection.query(query3, function (error, results, fields) {
+                con.connection.query(query3,async function (error, results, fields) {
                     if (results != undefined) {
                         let query2 = 'update from articulodelmesapp set codigo=""';
-                        con.connection.query(query2, function (error, results, fields) {
-                            resolve(data.response[0]);
-                        });
+                        const res = await con.connection.query(query2);
                     } else {
-                        resolve(data.response[0]);
+                        //resolve(data.response[0]);
                     }
+                    let aplicarpago = 'https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia=' + reference + '&CodigoOperacion=2';
+                    request.post(aplicarpago, function (error, response, body) { 
+                        console.log(body) 
+                        return resolve(data.response[0])
+                    });
                 });
             })
 
-            let aplicarpago = 'https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia=' + reference + '&CodigoOperacion=2';
-            request.post(aplicarpago, function (error, response, body) { console.log(body) });
         });
     });
 }
-let grabardatosremates = async function datos(reference, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, pagodetail, esapp, orden) {
+const grabardatosremates = async (reference, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, pagodetail, esapp, orden) => {
     //   var conn = new sql.ConnectionPool(conexion);
     var cnt = 0;
     tarjeta = tarjeta.substr(-4);
@@ -99,30 +107,29 @@ let grabardatosremates = async function datos(reference, cust_req_date, auth_req
 
             url = "api/grabarpagoreamtes/reference/" + reference + "/control_number/" + control_number + "/cust_req_date/" + cust_req_date + "/auth_req_date/" + auth_req_date + "/auth_rsp_date/" + auth_rsp_date + "/cust_rsp_date/" + cust_rsp_date + "/payw_result/" + payw_result + "/auth_result/" + auth_result + "/payw_code/" + payw_code + "/auth_code/" + auth_code + "/text/" + text + "/card_holder/" + card_holder + "/ussuing_bank/" + ussuing_bank + "/card_brand/" + card_brand + "/card_type/" + card_type + "/tarjeta/" + tarjeta + "/correoelectronico/" + correo + "/monto/" + monto + "/codigosucursal/" + codigosucursal + "/upc/" + upc + "/correoenviado/0/costoenvio/" + costoenvio + "/precio/" + precioetiqueta + "/esapp/0/costoseguro/" + costoseguro;
             let query = 'insert into respuestaspw2remates(reference,control_number,cust_req_date,auth_req_date,auth_rsp_date,cust_rsp_date,payw_result,auth_result,payw_code,auth_code,text,card_holder,ussuing_bank,card_brand,card_type,tarjeta,correoelectronico,monto,codigosucursal,upc,enviado) values ' + ' (' + "'" + reference + "'" + ', ' + "'" + control_number + "'" + ', ' + "'" + cust_req_date + "'" + ', ' + "'" + auth_req_date + "'" + ', ' + "'" + auth_rsp_date + "'" + ', ' + "'" + cust_rsp_date + "'" + ', ' + "'" + payw_result + "'" + ', ' + "'" + auth_result + "'" + ', ' + "'" + payw_code + "'" + ', ' + "'" + auth_code + "'" + ', ' + "'" + text + "'" + ', ' + "'" + card_holder + "'" + ', ' + "'" + ussuing_bank + "'" + ', ' + "'" + card_brand + "'" + ', ' + "'" + card_type + "'" + ', ' + "'" + tarjeta + "'" + ', ' + "'" + correo + "'" + ', ' + "'" + monto + "'" + ',' + "'" + codigosucursal + "'" + ',' + "'" + upc + "'" + ',0)';
-
-            request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
-                cnt = cnt + 1;
-                con.connection.query(query, function (error, results, fields) {
+            con.connection.query(query, function (error, results, fields) {
+                if (error) { Logger('ErrorLogRemates', 'insert respuestaspw2', { query }) }
+                Logger('PagosRemates', 'respuestaspw2 OK', { query })
+                request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
+                    if (error) { Logger('ErrorLogRemates', 'grabarpagoremates php', { url }) }
+                    Logger('PagosRemates', 'grabarpagoremates php OK', { query })
+                    cnt = cnt + 1;
                     let aplicarpago = 'https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia=' + reference + '&CodigoOperacion=2';
                     console.log(aplicarpago)
-                    // request.post(aplicarpago,function(error,response,body){
-                    let respuesta = {
-                        respuesta: true
-                    }
-                    resolve(respuesta);
-                 });
-
-            });
-
+                    request.post(aplicarpago, function (error, response, body) {
+                        if(error) { Logger('ErrorLogRemates', 'ApliarPagoWeb WS', {error})}
+                        Logger('PagosRemates', 'AplicarPagoWeb WS OK', { aplicarpago })
+                        let respuesta = {
+                            respuesta: true
+                        }
+                        resolve(respuesta);
+                    })
+                })
+            })
         }
-
-
-
-
     });
 }
-
-let grabardatosempenov3 = async function datos(reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, correoelectronico, monto, codigosucursal, boleta, fechaConsulta, codigotipopago, dias, aplicarcomision) {
+const grabardatosempenov3 = async (reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, correoelectronico, monto, codigosucursal, boleta, fechaConsulta, codigotipopago, dias, aplicarcomision) => {
     var conn = new sql.ConnectionPool(conexion);
     tarjeta = tarjeta.substr(-4);
     return new Promise(function (resolve, reject) {
@@ -155,19 +162,18 @@ let grabardatosempenov3 = async function datos(reference, control_number, cust_r
                 '(' + "'" + reference + "'" + ', ' + "'" + control_number + "'" + ', ' + "'" + cust_req_date + "'" + ', ' + "'" + auth_req_date + "'" + ', ' + "'" + auth_rsp_date + "'" + ', ' + "'" + cust_rsp_date + "'" + ', ' + "'" + payw_result + "'" + ', ' + "'" + auth_result + "'" + ', ' + "'" + payw_code + "'" + ', ' + "'" + auth_code + "'" + ', ' + "'" + text + "'" + ', ' + "'" + card_holder + "'" + ', ' + "'" + ussuing_bank + "'" + ', ' + "'" + card_brand + "'" + ', ' + "'" + card_type + "'" + ', ' + "'" + tarjeta + "'" + ', ' + "'" + correoelectronico + "'" + ', ' + "'" + monto + "'" + ',' + "'" + codigosucursal + "'" + ',' + "'" + boleta + "'" + ',1,' + aplicarcomision + ')';
             con.connection.query(query, function (error, results, fields) {
                 let aplicarpago = 'https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia=' + reference + '&CodigoOperacion=1';
-                request.post(aplicarpago, function (error, response, body) { 
-                    console.log(body) 
+                request.post(aplicarpago, function (error, response, body) {
+                    console.log(body)
                     let respuesta = {
                         respuesta: true
                     }
                     resolve(respuesta);
                 });
-             });
+            });
         });
     });
 }
-
-let grabardatosempeno = async function datos(reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, correoelectronico, monto, codigosucursal, boleta, fechaConsulta, codigotipopago, dias) {
+const grabardatosempeno = async (reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, correoelectronico, monto, codigosucursal, boleta, fechaConsulta, codigotipopago, dias) => {
     var conn = new sql.ConnectionPool(conexion);
     tarjeta = tarjeta.substr(-4);
     return new Promise(function (resolve, reject) {
@@ -198,10 +204,10 @@ let grabardatosempeno = async function datos(reference, control_number, cust_req
             boleta = boleta ? boleta : null;
             let query = 'insert into respuestaspw2(reference,control_number,cust_req_date,auth_req_date,auth_rsp_date,cust_rsp_date,payw_result,auth_result,payw_code,auth_code,text,card_holder,issuing_bank,card_brand,card_type,tarjeta,correoelectronico,monto,codigosucursal,boleta,enviado) values ' +
                 '(' + "'" + reference + "'" + ', ' + "'" + control_number + "'" + ', ' + "'" + cust_req_date + "'" + ', ' + "'" + auth_req_date + "'" + ', ' + "'" + auth_rsp_date + "'" + ', ' + "'" + cust_rsp_date + "'" + ', ' + "'" + payw_result + "'" + ', ' + "'" + auth_result + "'" + ', ' + "'" + payw_code + "'" + ', ' + "'" + auth_code + "'" + ', ' + "'" + text + "'" + ', ' + "'" + card_holder + "'" + ', ' + "'" + ussuing_bank + "'" + ', ' + "'" + card_brand + "'" + ', ' + "'" + card_type + "'" + ', ' + "'" + tarjeta + "'" + ', ' + "'" + correoelectronico + "'" + ', ' + "'" + monto + "'" + ',' + "'" + codigosucursal + "'" + ',' + "'" + boleta + "'" + ',0)';
-            con.connection.query(query, function (error, results, fields) { 
+            con.connection.query(query, function (error, results, fields) {
                 let aplicarpago = 'https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia=' + reference + '&CodigoOperacion=1';
-                request.post(aplicarpago, function (error, response, body) { 
-                    console.log(body) 
+                request.post(aplicarpago, function (error, response, body) {
+                    console.log(body)
                     let respuesta = {
                         respuesta: true
                     }
@@ -211,8 +217,7 @@ let grabardatosempeno = async function datos(reference, control_number, cust_req
         });
     });
 }
-
-let grabardatosempenomultiple = async function datos(reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, pagodetail, esapp) {
+const grabardatosempenomultiple = async (reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, pagodetail, esapp) => {
     var cnt = 0;
     tarjeta = tarjeta.substr(-4);
     let detalle = pagodetail;
@@ -245,10 +250,10 @@ let grabardatosempenomultiple = async function datos(reference, control_number, 
             let query = 'insert into respuestaspw2(reference,control_number,cust_req_date,auth_req_date,auth_rsp_date,cust_rsp_date,payw_result,auth_result,payw_code,auth_code,text,card_holder,issuing_bank,card_brand,card_type,tarjeta,correoelectronico,monto,codigosucursal,boleta,enviado) values ' +
                 '(' + "'" + reference + "'" + ', ' + "'" + controlnumber + "'" + ', ' + "'" + cust_req_date + "'" + ', ' + "'" + auth_req_date + "'" + ', ' + "'" + auth_rsp_date + "'" + ', ' + "'" + cust_rsp_date + "'" + ', ' + "'" + payw_result + "'" + ', ' + "'" + auth_result + "'" + ', ' + "'" + payw_code + "'" + ', ' + "'" + auth_code + "'" + ', ' + "'" + text + "'" + ', ' + "'" + card_holder + "'" + ', ' + "'" + ussuing_bank + "'" + ', ' + "'" + card_brand + "'" + ', ' + "'" + card_type + "'" + ', ' + "'" + tarjeta + "'" + ', ' + "'" + correoelectronico + "'" + ', ' + "'" + monto + "'" + ',' + "'" + codsucursal + "'" + ',' + "'" + boleta + "'" + ',0)';
             cnt = cnt + 1;
-            con.connection.query(query, function (error, results, fields) { 
+            con.connection.query(query, function (error, results, fields) {
                 if (detalle.length == cnt) {
-                    let aplicarpago ='https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia='+reference+'&CodigoOperacion=1';
-                    request.post(aplicarpago,function(error,response,body){
+                    let aplicarpago = 'https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia=' + reference + '&CodigoOperacion=1';
+                    request.post(aplicarpago, function (error, response, body) {
                         console.log(body)
                         let respuesta = {
                             respuesta: true
@@ -260,8 +265,7 @@ let grabardatosempenomultiple = async function datos(reference, control_number, 
         }
     });
 }
-
-let grabardatosempenoprueba = async function datos(reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, pagodetail, esapp, soloinfo = false) {
+const grabardatosempenoprueba = async (reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, pagodetail, esapp, soloinfo = false) => {
     tarjeta = tarjeta.substr(-4);
     let detalle = pagodetail;
     return new Promise(function (resolve, reject) {
@@ -293,14 +297,18 @@ let grabardatosempenoprueba = async function datos(reference, control_number, cu
 
             let query = `insert into respuestaspw2(reference,control_number,cust_req_date,auth_req_date,auth_rsp_date,cust_rsp_date,payw_result,auth_result,payw_code,auth_code,text,card_holder,issuing_bank,card_brand,card_type,tarjeta,correoelectronico,monto,codigosucursal,boleta,enviado) values ` +
                 '(' + "'" + reference + "'" + ', ' + "'" + controlnumber + "'" + ', ' + "'" + cust_req_date + "'" + ', ' + "'" + auth_req_date + "'" + ', ' + "'" + auth_rsp_date + "'" + ', ' + "'" + cust_rsp_date + "'" + ', ' + "'" + payw_result + "'" + ', ' + "'" + auth_result + "'" + ', ' + "'" + payw_code + "'" + ', ' + "'" + auth_code + "'" + ', ' + "'" + text + "'" + ', ' + "'" + card_holder + "'" + ', ' + "'" + ussuing_bank + "'" + ', ' + "'" + card_brand + "'" + ', ' + "'" + card_type + "'" + ', ' + "'" + tarjeta + "'" + ', ' + "'" + detalle[i].correoelectronico + "'" + ', ' + "'" + detalle[i].monto + "'" + ',' + "'" + detalle[i].codigosucursal + "'" + ',' + "'" + detalle[i].boleta + "'" + ',0)';
-            con.connection.query(query, function (error, results, fields) { 
-                if(error) return reject(error);
-                
+            con.connection.query(query, function (error, results, fields) {
+                if (error) { Logger('ErrorLog', 'insert respuestaspw2', error) }
+                Logger('PagosBoletas', 'Insert respuestas OK', { query })
                 url = "api/grabarpagoboleta/reference/" + reference + "/control_number/" + controlnumber + "/cust_req_date/" + cust_req_date + "/auth_req_date/" + auth_req_date + "/auth_rsp_date/" + auth_rsp_date + "/cust_rsp_date/" + cust_rsp_date + "/payw_result/" + payw_result + "/auth_result/" + auth_result + "/payw_code/" + payw_code + "/auth_code/" + auth_code + "/text/" + text + "/card_holder/" + card_holder + "/ussuing_bank/" + ussuing_bank + "/card_brand/" + card_brand + "/card_type/" + card_type + "/tarjeta/" + tarjeta + "/correoelectronico/" + correoelectronico + "/monto/" + monto + "/codigosucursal/" + codsucursal + "/boleta/" + boleta + "/correoenviado/0/fechaConsulta/" + date + "/ctpago/" + codtipopago + "/dias/" + diaspagados + "/esapp/0";;
                 request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
+                    if (error) { Logger('ErrorLog', 'Llamada api/grabarpagoboleta de php', error) }
+                    Logger('PagosBoletas', 'grabarpagoboleta php OK', { url })
                     let aplicarpago = 'https://grupoalvarez.com.mx:4435/api/PagoEnLinea/AplicarPagoWeb?FolioAutorizacion=1&Referencia=' + reference + '&CodigoOperacion=1';
-                    request.post(aplicarpago, function (error, response, body) { 
-                        console.log(body) 
+                    request.post(aplicarpago, function (error, response, body) {
+                        if (error) { Logger('ErrorLog', 'Llamada WS AplicarPagoWeb', error) }
+                        Logger('PagosBoletas', 'PagoEnLinea WS OK', { aplicarpago })
+                        console.log(body)
                         let respuesta = {
                             respuesta: true
                         }
@@ -311,8 +319,7 @@ let grabardatosempenoprueba = async function datos(reference, control_number, cu
         }
     });
 }
-
-let grabardatosprestamopersonalyvale = async function datos(reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, correoelectronico, monto, codigosucursal, codigoprestamo, esvale) {
+const grabardatosprestamopersonalyvale = async (reference, control_number, cust_req_date, auth_req_date, auth_rsp_date, cust_rsp_date, payw_result, auth_result, payw_code, auth_code, text, card_holder, ussuing_bank, card_brand, card_type, tarjeta, correoelectronico, monto, codigosucursal, codigoprestamo, esvale) => {
     tarjeta = tarjeta.substr(-4);
     return new Promise(function (resolve, reject) {
         reference = reference ? reference : 'NULL';
@@ -342,7 +349,7 @@ let grabardatosprestamopersonalyvale = async function datos(reference, control_n
                 if (results != undefined) {
                     Resultado = JSON.parse(JSON.stringify(results));
                     obtenernonce(correoelectronico).then(response => {
-                        var url = "http://intranet.maxilana.com/wsprestamos/serviciosprestamos.asmx?WSDL"
+                        var url = "https://grupoalvarez.com.mx/wsprestamos/serviciosprestamos.asmx?WSDL"
                         const args = {
                             id: Resultado[0].id,
                             reference: reference,
@@ -413,7 +420,6 @@ let grabardatosprestamopersonalyvale = async function datos(reference, control_n
         });
     });
 }
-
 let obtenernonce = async function desencriptar(dato) {
     return new Promise(function (resolve, reject) {
         _sodium.ready;

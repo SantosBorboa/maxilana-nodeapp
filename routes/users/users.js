@@ -42,13 +42,15 @@ Router.post('/api/usuarios/registro',  (req, res) => {
         return res.send(respuesta);
     }).catch(error => {return res.send(error)});
 })
-Router.post('/api/usuarios/editarperfil',  (req, res) => {
-    const {  Apellidop, Apellidom, Nombre, Celular, Correo, Contrasena, Usuario } = req.body
-    users.EditarCliente(Usuario, Apellidop, Apellidom, Nombre, Celular, Correo, Contrasena)
-    .then(respuesta => {
-        return res.send(respuesta);
-    })
-    .catch(error => {return res.send(error)});
+Router.post('/api/usuarios/editarperfil', async (req, res) => {
+    const {  Apellidop, Apellidom, Nombre, Celular, Correo, Usuario } = req.body
+    try {
+        const userResp = await users.ConsultarTelefono(Usuario) 
+        const resp = await users.EditarCliente(Usuario, Apellidop, Apellidom, Nombre, userResp.Celular, Correo, undefined)
+        return res.send(resp)
+    } catch (error) {
+        return res.send(error)
+    }
 })
 Router.post('/api/usuarios/agregarboleta',  (req, res) => {
     let usuario = req.body.usuario ? req.body.usuario : undefined;

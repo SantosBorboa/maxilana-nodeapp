@@ -12,21 +12,21 @@ let ejecutarprocesodepagos = async function consulta() {
         const request = require('request');
         request(url, function (error, response, body) {
             ResultadoSQL = JSON.parse(response.body);
-            const query = `SELECT r.id,r.reference,r.control_number,
-            r.cust_req_date,r.auth_req_date,r.auth_rsp_date,
-            r.cust_rsp_date,r.payw_result,r.auth_result,
-            r.payw_code,r.auth_code,r.text,r.card_holder,r.issuing_bank,
-            r.card_brand,r.card_type,r.tarjeta,r.correoelectronico,
-            r.monto,r.codigosucursal,r.boleta,enviado,
-            DATE_FORMAT(r.fecha,'%Y-%m-%d %T.%f') as fecha,
-            p.diaspagados,p.codigotipopago,o.pagoapp 
-            FROM respuestaspw2 r 
-            left join informacionpw2 p on (p.id=r.control_number or p.idPrincipal = r.control_number) 
-            inner join informacion3dsecure o on (o.reference=p.idPrincipal or o.reference=p.id) 
-            where r.id > 22000 
-            and payw_result='A' 
-            and text='Aprobado' 
-            order by r.id asc
+            const query = `select rpw2.id, rpw2.reference, rpw2.control_number,
+            rpw2.cust_req_date, rpw2.auth_req_date, rpw2.auth_rsp_date,
+            rpw2.cust_rsp_date, rpw2.payw_result, rpw2.auth_result,
+            rpw2.payw_code, rpw2.auth_code, rpw2.text, rpw2.card_holder, rpw2.issuing_bank,
+            rpw2.card_brand, rpw2.card_type, rpw2.tarjeta, rpw2.correoelectronico,
+            rpw2.monto, rpw2.codigosucursal, rpw2.boleta, rpw2.enviado,
+            DATE_FORMAT(rpw2.fecha,'%Y-%m-%d %T.%f') as fecha,
+            ipw2.diaspagados, ipw2.codigotipopago, i3ds.pagoapp
+            from respuestaspw2 rpw2
+            join informacionpw2 ipw2 on (ipw2.id = rpw2.control_number or ipw2.idPrincipal = rpw2.control_number)
+            join informacion3dsecure i3ds on (i3ds.reference = ipw2.IdPrincipal or i3ds.reference = ipw2.id)
+            where rpw2.payw_result='A' 
+            and rpw2.text='Aprobado'
+            order by rpw2.id desc
+            limit 1000;
             `
             //query ="SELECT r.id,r.reference,control_number,cust_req_date,auth_req_date,auth_rsp_date,cust_rsp_date,payw_result,auth_result,payw_code,auth_code,text,card_holder,issuing_bank,card_brand,card_type,r.tarjeta,r.correoelectronico,r.monto,r.codigosucursal,r.boleta,enviado,DATE_FORMAT(r.fecha,'%Y-%m-%d %T.%f') as fecha,p.diaspagados,p.codigotipopago,o.pagoapp FROM respuestaspw2 r left join informacionpw2 p on p.idPrincipal = r.control_number inner join informacion3dsecure o on o.reference=p.idPrincipal where r.id > 15560 and payw_result='A' and text='Aprobado' order by r.id asc"
             con.connection.query(query, function (error, results, fields) {

@@ -112,7 +112,7 @@ let ejecutarventav1 = async function venta(vencimiento,ccv,tarjeta,Monto,Sucursa
             CMD_TRANS     : 'AUTH',
             TERMINAL_ID   :  env.parsed.terminal_id,
             AMOUNT        : total,
-            MODE          : 'DEC',  //DEC PRD AUT
+            MODE          : 'PRD',  //DEC PRD AUT
             CUSTOMER_REF2 : referencia, // Esto debe de ser lo que ve el cliente en su estado de cuenta    
             CARD_NUMBER   : tarjeta,
             CARD_EXP      : vencimiento,
@@ -150,7 +150,7 @@ let ejecutarventa = async function venta(vencimiento,ccv,tarjeta,Monto,Sucursal,
             CMD_TRANS     : 'AUTH',
             TERMINAL_ID   :  env.parsed.terminal_id,
             AMOUNT        : total,
-            MODE          : 'DEC',  //DEC PRD AUT
+            MODE          : 'PRD',  //DEC PRD AUT
             CUSTOMER_REF2 : referencia, // Esto debe de ser lo que ve el cliente en su estado de cuenta    
             CARD_NUMBER   : tarjeta,
             CARD_EXP      : vencimiento,
@@ -187,7 +187,7 @@ let ejecutarcobromultiple = async function venta(vencimiento,ccv,tarjeta,Monto,u
             CMD_TRANS     : 'AUTH',
             TERMINAL_ID   :  env.parsed.terminal_id,
             AMOUNT        : total,
-            MODE          : 'DEC',  //DEC PRD AUT
+            MODE          : 'PRD',  //DEC PRD AUT
             CUSTOMER_REF2 : referencia, // Esto debe de ser lo que ve el cliente en su estado de cuenta    
             CARD_NUMBER   : tarjeta,
             CARD_EXP      : vencimiento,
@@ -224,7 +224,7 @@ let ejecutarventaprueba = async function venta(vencimiento,ccv,tarjeta,Monto,Suc
             CMD_TRANS     : 'AUTH',
             TERMINAL_ID   :  env.parsed.terminal_id,
             AMOUNT        : total,
-            MODE          : 'DEC',  //DEC PRD AUT
+            MODE          : 'PRD',  //DEC PRD AUT
             CUSTOMER_REF2 : referencia, // Esto debe de ser lo que ve el cliente en su estado de cuenta    
             CARD_NUMBER   : tarjeta,
             CARD_EXP      : vencimiento,

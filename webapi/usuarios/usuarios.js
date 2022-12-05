@@ -6,7 +6,46 @@ const soap = require("../../node_modules/soap");
 const libsodium = require("../../webapi/libsodium/libsodium");
 const _sodium = require('../../node_modules/libsodium-wrappers');
 
-const consultarmonecero = (usuario) => {
+const CelExist = (celular)=>{
+    const url = `api/Usuarios/CelExist/Celular/${celular}`;
+    return new Promise((resolve, reject) => {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
+            if(error) return reject(error);
+            var response = JSON.parse(body);
+            response = response.data.response[0];
+            response = response ? response : undefined;
+            if (response !== undefined) {
+                const existe = response.Existe == '1'?true:false;
+                resolve(existe);
+            } else {
+                let error = {
+                    error: "Error al traer el dato."
+                }
+                reject(error);
+            }
+        });
+    })
+}
+const ConsultarTelefono = (usuario) => {
+    const url = `api/Usuarios/Telefono/CodigoUsuario/${usuario}`;
+    return new Promise((resolve, reject) => {
+        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
+            if(error) return reject(error);
+            var response = JSON.parse(body);
+            response = response.data.response[0];
+            response = response ? response : undefined;
+            if (response !== undefined) {
+                resolve(response);
+            } else {
+                let error = {
+                    error: "El usuario o contraseña no existe."
+                }
+                reject(error);
+            }
+        });
+    })
+}
+const consultarmonedero = (usuario) => {
     const url = `api/Usuarios/Monedero/${usuario}`;
     return new Promise((resolve, reject) => {
         request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
@@ -20,7 +59,7 @@ const consultarmonecero = (usuario) => {
                 let error = {
                     error: "El usuario o contraseña no existe."
                 }
-                resolve(error);
+                reject(error);
             }
         });
     })
@@ -285,5 +324,7 @@ module.exports = {
     obtenercomentarios,
     CambiarContraseñaUser,
     GetUser,
-
+    consultarmonedero,
+    ConsultarTelefono,
+    CelExist,
 }
