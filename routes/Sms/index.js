@@ -6,9 +6,9 @@ Router.post('/api/maxilanasms',  (req, res) => {
     if (req.body.celular !== undefined & req.body.mensaje !== undefined) {
         sms.send(req.body.celular, req.body.mensaje).then(response => {
             sms.sendInfoCentral(req.body.celular, req.body.mensaje).then(resp=>{
-                res.send(response);
-            });
-        })
+                return res.send(response);
+            }).catch(err => {return res.send(err)});
+        }).catch(err => {return res.send(err)});
     }
 });
 Router.post('/api/maxilanasmspp',  (req, res) => {

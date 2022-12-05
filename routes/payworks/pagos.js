@@ -16,13 +16,13 @@ Router.post('/api/pagos/cancelaciones', async (req, res, next) => {
     try {
         //verificamos si existe la cancelación y si existe regresar error.
         const datosRespPW2 = await datosPW2(reference);
-        if (!datosRespPW2) {
-            return res.send({ error: `La cancelación al pago ${reference} no se puede aplicar a movimientos inexistentes.` });
-        }
+        // if (!datosRespPW2) {
+        //     return res.send({ error: `La cancelación al pago ${reference} no se puede aplicar a movimientos inexistentes.` });
+        // }
 
         //realizamos la cancelación del pago.
         const respuesta = await vtas.cancelarpago(reference);
-        const canc = await insertaCancelacion(respuesta, datosRespPW2, user); //inserta independientemente si es aprobado o declinado.
+        // const canc = await insertaCancelacion(respuesta, datosRespPW2, user); //inserta independientemente si es aprobado o declinado.
         if (respuesta.resultado_payw == 'A') {
             return res.send(respuesta);
         } else {
@@ -80,7 +80,7 @@ const datosPW2 = (reference) => {
             await connection.connect()
             const query = `select * from respuestaspp_pw2 where control_number = '${reference}'`;
             const query2 = `select * from respuestaspw2 where control_number = '${reference}'`;
-            const query3 = `select * from respuestaspw2 where control_number = '${reference}'`;
+            const query3 = `select * from respuestaspw2remates where control_number = '${reference}'`;
             connection.query(query, (errorq, results, fields) => {
                 if (errorq) {
                     connection.end((errorend)=>{

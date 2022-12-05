@@ -5,11 +5,9 @@ let Obtenerpagos = async function consulta(boleta,codauth,ref){
 
     return new Promise(function(resolve,reject){
         
-        var url= "https://grupoalvarez.com.mx:8089/maxilanaApp/api/consultas/pagosempeno/"+boleta+"/"+codauth+"/"+ref;
+        var url= "https://grupoalvarez.com.mx:4430/maxilanaApp/api/consultas/pagosempeno/"+boleta+"/"+codauth+"/"+ref;
         var request = require('request');
         request(url, function (error, response, body) {
-            if(!response){ return reject({error:'No hay respuesta con datos de maxilanaApp'}) }
-            if(error){ return reject({error})}
              ResultadoSQL = JSON.parse(response.body);
              let arr = ResultadoSQL.data.response;
              resolve(arr)

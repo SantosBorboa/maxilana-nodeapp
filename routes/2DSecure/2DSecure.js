@@ -37,59 +37,77 @@ Router.post('/api/pagos/2dsecure/web/boletas', async (req, res, next) => {
         const status = req.body.status ? req.body.status : undefined;
         const cardtype = req.body.cardtype ? req.body.cardtype : undefined;
 
-        let tarjetadecrypt = '';
-        let ccvdecrypt = '';
-        let vencimientodecrypt = '';
-        let boletareference = '';
-        pw2empeno.ObtenerdatosboletasPrueba(Reference3D, eci, xid, cavv, status, cardtype).then(respuesta => {
-            var datainfo = respuesta;
-            boletareference = Math.floor(datainfo[0].boleta);
-            libsodium.desencriptar(datainfo[0].tarjeta).then(respuesta => {
-                tarjetadecrypt = respuesta;
-                libsodium.desencriptar(datainfo[0].vencimiento).then(respuesta => {
-                    vencimientodecrypt = respuesta;
-                    libsodium.desencriptar(datainfo[0].ccv2).then(respuesta => {
-                        ccvdecrypt = respuesta;
-                        pw2empeno.ejecutarcobrov5(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, total, boletareference, datainfo[0].status, datainfo[0].eci, datainfo[0].xid, datainfo[0].cavv).then(respuesta => {
-                            const { ...data } = respuesta;
-                            sendinfo.grabardatosempenoprueba(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo, 1).then(respuesta => {
-                                let error = {
-                                    Resultado: false,
-                                    Mensaje: data.resultado_payw=='A'?'Aprobado':data.texto,
-                                }
-                                if(data.resultado_payw == "A"){
-                                    error.Resultado = true;
-                                    emailempeno.sendemailprueba(Cliente, total, data.codigo_aut, data.referencia, datainfo[0].fecha, datainfo[0].correoelectronico, datainfo[0])
-                                    .then(respMail=>{
-                                        res.status(200).send(JSON.stringify(error));
-                                    })
-                                }
-                            });
+        const datainfo = await pw2empeno.ObtenerdatosboletasPrueba(Reference3D, eci, xid, cavv, status, cardtype)
+        boletareference = Math.floor(datainfo[0].boleta);
+        const tarjetadecrypt = await libsodium.desencriptar(datainfo[0].tarjeta)
+        const vencimientodecrypt = await libsodium.desencriptar(datainfo[0].vencimiento)
+        const ccvdecrypt = await libsodium.desencriptar(datainfo[0].ccv2)
 
-                            // if (respuesta.resultado_payw == "A") {
-                            //     var data = respuesta;
-                            //     sendinfo.grabardatosempenoprueba(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo, 1).then(respuesta => {
-                            //         let error = {
-                            //             Resultado: true,
-                            //             Mensaje: respuesta.texto
-                            //         }
-                            //         emailempeno.sendemailprueba(Cliente, total, data.codigo_aut, data.referencia, datainfo[0].fecha, datainfo[0].correoelectronico, datainfo[0]);
-                            //         res.status(200).send(JSON.stringify(error));
-                            //     });
-                            // } else {
-                            //     let error = {
-                            //         Resultado: false,
-                            //         Mensaje: respuesta.texto
-                            //     }
-                            //     res.status(400).send(error);
-                            // }
-                        });
-                    });
-                });
-            });
-        }).catch(error => {
-            return res.status(400).send(error);
-        });
+        const { ...data } = await pw2empeno.ejecutarcobrov5(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, total, boletareference, datainfo[0].status, datainfo[0].eci, datainfo[0].xid, datainfo[0].cavv)
+        const respGrabarDatosEmpeno = await sendinfo.grabardatosempenoprueba(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo, 1)
+        let dataBack = {
+            Resultado: false,
+            Mensaje: data.resultado_payw == 'A' ? 'Aprobado' : data.texto,
+        }
+        if (data.resultado_payw == "A") {
+            dataBack.Resultado = true;
+            const respEmail = await emailempeno.sendemailprueba(Cliente, total, data.codigo_aut, data.referencia, datainfo[0].fecha, datainfo[0].correoelectronico, datainfo[0])
+                // .then(respMail => {
+                //     res.status(200).send(JSON.stringify(error));
+                // })
+        }
+        res.send(dataBack)
+
+        // pw2empeno.ObtenerdatosboletasPrueba(Reference3D, eci, xid, cavv, status, cardtype).then(respuesta => {
+        //     var datainfo = respuesta;
+        //     boletareference = Math.floor(datainfo[0].boleta);
+        //     libsodium.desencriptar(datainfo[0].tarjeta).then(respuesta => {
+        //         tarjetadecrypt = respuesta;
+        //         libsodium.desencriptar(datainfo[0].vencimiento).then(respuesta => {
+        //             vencimientodecrypt = respuesta;
+        //             libsodium.desencriptar(datainfo[0].ccv2).then(respuesta => {
+        //                 ccvdecrypt = respuesta;
+        //                 pw2empeno.ejecutarcobrov5(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, total, boletareference, datainfo[0].status, datainfo[0].eci, datainfo[0].xid, datainfo[0].cavv).then(respuesta => {
+        //                     const { ...data } = respuesta;
+        //                     sendinfo.grabardatosempenoprueba(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo, 1).then(respuesta => {
+        //                         let error = {
+        //                             Resultado: false,
+        //                             Mensaje: data.resultado_payw=='A'?'Aprobado':data.texto,
+        //                         }
+        //                         if(data.resultado_payw == "A"){
+        //                             error.Resultado = true;
+        //                             emailempeno.sendemailprueba(Cliente, total, data.codigo_aut, data.referencia, datainfo[0].fecha, datainfo[0].correoelectronico, datainfo[0])
+        //                             .then(respMail=>{
+        //                                 res.status(200).send(JSON.stringify(error));
+        //                             })
+        //                         }
+        //                     });
+
+        //                     // if (respuesta.resultado_payw == "A") {
+        //                     //     var data = respuesta;
+        //                     //     sendinfo.grabardatosempenoprueba(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo, 1).then(respuesta => {
+        //                     //         let error = {
+        //                     //             Resultado: true,
+        //                     //             Mensaje: respuesta.texto
+        //                     //         }
+        //                     //         emailempeno.sendemailprueba(Cliente, total, data.codigo_aut, data.referencia, datainfo[0].fecha, datainfo[0].correoelectronico, datainfo[0]);
+        //                     //         res.status(200).send(JSON.stringify(error));
+        //                     //     });
+        //                     // } else {
+        //                     //     let error = {
+        //                     //         Resultado: false,
+        //                     //         Mensaje: respuesta.texto
+        //                     //     }
+        //                     //     res.status(400).send(error);
+        //                     // }
+        //                 });
+        //             });
+        //         });
+        //     });
+        // }).catch(error => {
+        //     return res.status(400).send(error);
+        // });
+        
     } catch (ex) {
         res.status(400).send(ex);
     }
@@ -289,10 +307,10 @@ Router.post('/api/pagos/2dsecure/vales', async (req, res, next) => {
                     vencimientodecrypt = respuesta;
                     libsodium.desencriptar(datainfo.cvv2).then(respuesta => {
                         ccvdecrypt = respuesta;
-                        pw2valesyprestamos.ejecutarventav1(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, datainfo.status, datainfo.eci, datainfo.xid, datainfo.cavv, 1).then(async(respuesta) => {
+                        pw2valesyprestamos.ejecutarventav1(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, datainfo.status, datainfo.eci, datainfo.xid, datainfo.cavv, 1).then(async (respuesta) => {
                             const i = respuesta;
                             if (i.resultado_payw == "A") {
-                                sendinfo.grabardatosprestamopersonalyvale(i.referencia, Reference3D, i.fecha_req_cte, i.auth_req_date, i.auth_rsp_date, i.fecha_rsp_cte, i.resultado_payw, i.auth_result, i.payw_code, i.codigo_aut, i.texto, i.card_holder, i.issuing_bank, i.card_brand, i.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, 1).then(async(response) => {
+                                sendinfo.grabardatosprestamopersonalyvale(i.referencia, Reference3D, i.fecha_req_cte, i.auth_req_date, i.auth_rsp_date, i.fecha_rsp_cte, i.resultado_payw, i.auth_result, i.payw_code, i.codigo_aut, i.texto, i.card_holder, i.issuing_bank, i.card_brand, i.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, 1).then(async (response) => {
                                     let Res = {
                                         Resultado: true,
                                         Mensaje: 'Aprobado'
@@ -347,24 +365,26 @@ Router.post('/api/pagos/2dsecure/pp', async (req, res, next) => {
 
         const respuestapw2 = await pw2valesyprestamos.ejecutarventav1(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, datainfo.status, datainfo.eci, datainfo.xid, datainfo.cavv, 1);
         const { ...i } = respuestapw2;
-        sendinfo.grabardatosprestamopersonalyvale(i.referencia, Reference3D, i.fecha_req_cte, i.auth_req_date, i.auth_rsp_date, i.fecha_rsp_cte, i.resultado_payw, i.auth_result, i.payw_code, i.codigo_aut, i.texto, i.card_holder, i.issuing_bank, i.card_brand, i.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, 0).then(async(response) => {
+        sendinfo.grabardatosprestamopersonalyvale(i.referencia, Reference3D, i.fecha_req_cte, i.auth_req_date, i.auth_rsp_date, i.fecha_rsp_cte, i.resultado_payw, i.auth_result, i.payw_code, i.codigo_aut, i.texto, i.card_holder, i.issuing_bank, i.card_brand, i.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, 0).then(async (response) => {
             let Res = {
                 Resultado: false,
-                Mensaje: i.resultado_payw=='A'?'Aprobado':i.texto,
+                Mensaje: i.resultado_payw == 'A' ? 'Aprobado' : i.texto,
             }
 
-            if(i.resultado_payw =='A'){
+            if (i.resultado_payw == 'A') {
                 Res.Resultado = true;
                 await sms.send(datainfo.celular, "Se aplicó un pago al prestamo: " + datainfo.codigosucursal + "-" + datainfo.codigoprestamo + " por un monto de : $" + datainfo.monto);
-                await sms.sendInfoCentral(datainfo.celular, "Se aplicó un pago al prestamo: " + datainfo.codigoprestamo + " por un monto de : $" + datainfo.monto);    
+                await sms.sendInfoCentral(datainfo.celular, "Se aplicó un pago al prestamo: " + datainfo.codigoprestamo + " por un monto de : $" + datainfo.monto);
             }
 
-            return res.status(200).send(Res)
+            return res.send(Res)
         })
     } catch (ex) {
         res.status(400).send(ex);
     }
 });
+
+// end points para app ////
 Router.post('/api/pagos/2dsecure/producto/v1', (req, res, next) => {
     const Reference3D = req.body.Reference3D;
     var costoenvio = req.body.envio;
@@ -388,9 +408,9 @@ Router.post('/api/pagos/2dsecure/producto/v1', (req, res, next) => {
                 libsodium.desencriptar(datainfo.ccv2).then(respuesta => {
                     ccvdecrypt = respuesta;
                     pw2remates.ejecutarventav2(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, datainfo.monto, datainfo.codigosucursal, datainfo.upc, datainfo.status, datainfo.eci, datainfo.xid, datainfo.cavv, Reference3D).then(respuesta => {
-                        const {...data} = respuesta;
-                        sendinfo.grabardatos(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.upc, costoenvio, datainfo.precioneto, Seguro, ClickCollect).then(async(respuesta) => {
-                            if(data.resultado_payw == "A"){
+                        const { ...data } = respuesta;
+                        sendinfo.grabardatos(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.upc, costoenvio, datainfo.precioneto, Seguro, ClickCollect).then(async (respuesta) => {
+                            if (data.resultado_payw == "A") {
                                 precioreal = (parseFloat(datainfo.monto) - parseFloat(costoenvio));
                                 precioreal = (parseFloat(precioreal) - parseFloat(Seguro));
                                 costoenvio = (parseFloat(costoenvio) + parseFloat(Seguro));
@@ -407,10 +427,10 @@ Router.post('/api/pagos/2dsecure/producto/v1', (req, res, next) => {
                                     envio: costoenvio
                                 }
                                 res.status(200).send(JSON.stringify(response));
-                            }else{
+                            } else {
                                 return res.send("D");
                             }
-                        }).catch(err => {return res.status(400).send({error: err})})
+                        }).catch(err => { return res.status(400).send({ error: err }) })
                         // if (respuesta.resultado_payw == "A") {
                         //     // var data = respuesta;
                         //     sendinfo.grabardatos(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.upc, costoenvio, datainfo.precioneto, Seguro, ClickCollect).then(respuesta => {
@@ -438,7 +458,7 @@ Router.post('/api/pagos/2dsecure/producto/v1', (req, res, next) => {
                 });
             });
         });
-    }).catch(error=>{return res.status(400).send({error})});
+    }).catch(error => { return res.status(400).send({ error }) });
 });
 Router.post('/api/pagos/2dsecure/boletas/v1', (req, res, next) => {//AQUI
 
@@ -466,11 +486,11 @@ Router.post('/api/pagos/2dsecure/boletas/v1', (req, res, next) => {//AQUI
                     libsodium.desencriptar(datainfo.ccv2).then(respuesta => {
                         ccvdecrypt = respuesta;
                         pw2empeno.ejecutarcobrov4(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, datainfo.monto, datainfo.codigosucursal, boletareference, datainfo.status, datainfo.eci, datainfo.xid, datainfo.cavv).then(async (respuesta) => {
-                            const {...data} = respuesta;
-                            sendinfo.grabardatosempenov3(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.boleta, fechaConsulta, datainfo.codigotipopago, datainfo.diaspagados, aplicacomision).then(async(respuesta) => {
+                            const { ...data } = respuesta;
+                            sendinfo.grabardatosempenov3(data.referencia, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.boleta, fechaConsulta, datainfo.codigotipopago, datainfo.diaspagados, aplicacomision).then(async (respuesta) => {
                                 if (data.resultado_payw == "A") {
                                     await sms.send(datainfo.celular, "Se aplicó un pago a la boleta: " + datainfo.boleta + " por un monto de : $" + datainfo.monto);
-                                    await sms.sendInfoCentral(datainfo.celular, "Se aplicó un pago a la boleta: " + datainfo.boleta + " por un monto de : $" + datainfo.monto);        
+                                    await sms.sendInfoCentral(datainfo.celular, "Se aplicó un pago a la boleta: " + datainfo.boleta + " por un monto de : $" + datainfo.monto);
                                     await emailempeno.sendemail(Cliente, datainfo.codigosucursal, datainfo.sucnom, datainfo.boleta, datainfo.monto, data.codigo_aut, data.referencia, datainfo.fecha, CorreoPersonal, datainfo.correoelectronico);
                                     var response = {
                                         cliente: Reference3D,
@@ -496,6 +516,8 @@ Router.post('/api/pagos/2dsecure/boletas/v1', (req, res, next) => {//AQUI
 
     });
 });
+
+
 // async function guardarRespuestasPP_PW2(reference3d, dataPw2, info, card, esvale) {
 //     return new Promise((resolve, reject) => {
 //         const { referencia, resultado_payw, id_afiliacion, fecha_req_cte, fecha_rsp_cte, texto } = dataPw2;

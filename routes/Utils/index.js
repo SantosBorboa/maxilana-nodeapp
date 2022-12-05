@@ -7,7 +7,7 @@ const listEndpoints = require('express-list-endpoints');
 var uniqid = require("uuid");
 const fs = require('fs');
 
-Router.get('/api/reset/', (req, res) => {
+Router.get('/api/reset', (req, res) => {
     var id = uniqid.v4();
     fs.writeFile('./tmp/restart.txt', id, 'utf-8', function (err, data) {
         if (err) throw err;

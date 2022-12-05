@@ -17,15 +17,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors())
 app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    //res.setTimeout(0)
+    res.header('Access-Control-Allow-Origin', '*');
+    res.setTimeout(0)
     next();
 });
 
 //middlewares de autenticacion por token.....
 const mw = require('./Middlewares/secureport.js');
-app.use((req, res, next) => {mw.Logger(req, res, next)})
-app.use((req, res, next)=>{mw.SecureEntry(req, res, next)});
+app.use((req, res, next) => { mw.Logger(req, res, next) })
+app.use((req, res, next) => { mw.SecureEntry(req, res, next) });
 
 //******ROUTERS*******//
 const rematesRouter = require('./routes/Remates/Remates.js');
@@ -44,6 +44,10 @@ const appRouter = require('./routes/App');
 const smsRouter = require('./routes/Sms');
 const consolaRouter = require('./routes/Consola');
 const utilsRouter = require('./routes/Utils');
+const router3dsecure = require('./routes/3DSecure');
+const router2dsecure = require('./routes/2DSecure/2DSecure');
+const routerPayworks = require('./routes/payworks/pagos');
+const routerSaveData = require('./routes/storage/datastorage');
 const pagosV2Router = require('./routes/ApiPagosV2');
 
 //utils
@@ -135,7 +139,7 @@ app.get('/api/usuarios/obtenercodigoregistro', usuariosRouter)
 app.get('/api/usuarios/obtenercodigorecuperacion', usuariosRouter);
 app.get('/api/usuarios/Validarcodigo/:acccion', usuariosRouter);
 app.post('/api/usuarios/validateuser', usuariosRouter);
-app.post('/api/usuarios/deleteuser',usuariosRouter)
+app.post('/api/usuarios/deleteuser', usuariosRouter)
 app.post('/api/usuarios/changepassword', usuariosRouter);
 app.post('/api/usuarios/changepass', usuariosRouter);
 app.get('/api/usuarios/validarcodigorecuperacion', usuariosRouter)
@@ -163,16 +167,11 @@ app.get('/api/procesos/pagospendientes', (req, res) => {
 });
 
 /// CONSOLA /////////
+app.post('/api/consola/login', consolaRouter);
 app.get('/api/consola/pagos/ventas', consolaRouter);
 app.post('/api/consola/pagos/empeno', consolaRouter);
 app.post('/api/consola/pagos/control', consolaRouter);
 app.post('/api/consola/pagos/ppyvales', consolaRouter);
-
-//ENRUTADORES PROVISIONALES (PRIMERO SE HARÁN CON LO NUEVO DE PAGOS)
-const router3dsecure = require('./routes/3DSecure');
-const router2dsecure = require('./routes/2DSecure/2DSecure');
-const routerPayworks = require('./routes/payworks/pagos');
-const routerSaveData = require('./routes/storage/datastorage');
 
 /****************** DATA STORAGE   ************* */
 app.post('/api/storage/savedata', routerSaveData);
@@ -191,13 +190,13 @@ app.post('/api/pagos/3dsecure/web/boleta/v1', router3dsecure);
 app.post('/api/pagos/3dsecure/web/productos/v1', router3dsecure);
 app.post('/api/pagos/3dsecure/rechazos', router3dsecure);
 
-app.post('/api/retorno3dSecure', (req, res, next)=>{
+app.post('/api/retorno3dSecure', (req, res, next) => {
     const data = {
         ...req.body,
         cardtype: req.query.cardtype,
     }
     return res.send(data);
-}) 
+})
 
 /******* END PAYWORKS 3DSECURE 2.0 ************/
 
@@ -217,7 +216,7 @@ app.post('/api/pagos/cancelaciones', routerPayworks);
 
 //Todas las rutas
 app.get('/api/', (req, res) => {
-    if(!req.authorization){ return res.send({error: 'No autorizado a usar el endpoint.'})};
+    if (!req.authorization) { return res.send({ error: 'No autorizado a usar el endpoint.' }) };
     return res.send(listEndpoints(app));
 });
 
@@ -237,6 +236,8 @@ app.get('/api/fecha', (req, res) => {
 });
 
 app.get('/api/reset/', utilsRouter);
+
+app.post('/api/smstest', (req, res, next)=>{return res.send({ok:'ok'})})
 
 function verifyToken(req, res, next) {
     //Get Auth header value  
@@ -259,12 +260,12 @@ function verifyToken(req, res, next) {
 }
 
 const server = app.listen(PORT, () => console.log('server running on port ' + PORT))
-        .on('error', (error)=>{
-            console.log(error.message);
-        });
+    .on('error', (error) => {
+        console.log(error.message);
+    });
 
-server.keepAliveTimeout = (61*1000);
-server.headersTimeout = ((61*1000)+1000);
+server.keepAliveTimeout = 0;
+server.headersTimeout = 0;
 
 
 ///ANTES DE CORRER LA APLICACIÓN EN WINDOWS CORRER LA SIGUIENTE LINEA DECÓDIGO//

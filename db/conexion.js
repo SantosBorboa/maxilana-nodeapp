@@ -1,4 +1,4 @@
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const sql = require("mssql");
 let connection = mysql.createPool({
   host            : '198.12.231.45',
@@ -6,8 +6,7 @@ let connection = mysql.createPool({
   password        : 'Cuitlahuac9607',
   database        : 'maxilanabd',
   charset         : 'utf8',
-  connectionLimit : 10000,
-  timeout : 3000,
+  connectionLimit : 1000,
 }).on('error', function(error){
 }).on('connection', function(connection){
   //console.log(connection);
@@ -31,8 +30,7 @@ let connectionsubastas = mysql.createPool({
   password        : 'erick2021',
   database        : 'abroadcaster',
   charset         : 'utf8',
-  timeout : 1000,
-  connectionLimit : 10000,
+  connectionLimit : 1000,
 }).on('error', function(error){
 }).on('connection', function(connection){
   //console.log(connection);
