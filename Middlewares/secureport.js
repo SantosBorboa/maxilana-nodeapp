@@ -85,6 +85,7 @@ const rutasLogger = (ruta) => {
     const xr = `${ruta}***`
     const rutas = `
     /api***
+    /api/***
     /api/usuarios/login***
     /api/usuarios/registro***
     /api/usuarios/editarperfil***
@@ -105,6 +106,7 @@ const rutasLogger = (ruta) => {
     /api/pagos/2dsecure/boletas/v1***
     /api/pagos/cancelaciones***
     /api/reset***
+    /api/reset/***
     `;
     // const rutas = `
     // /api/security/gettoken***

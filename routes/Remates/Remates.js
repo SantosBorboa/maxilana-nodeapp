@@ -92,6 +92,9 @@ Router.get('/api/productos/prueba', (req, res, next) => {
 Router.get('/api/productos/:idproducto', async (req, res, next) => {
     try {
         const { idproducto } = req.params
+        if(idproducto == '' || idproducto == undefined) {
+            return res.send({error:'Código de producto inválido'})
+        }
         const producto = await remates.Obtenerarticulosid(idproducto);
         return res.send(producto)
     } catch (error) {

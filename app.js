@@ -49,8 +49,11 @@ const router2dsecure = require('./routes/2DSecure/2DSecure');
 const routerPayworks = require('./routes/payworks/pagos');
 const routerSaveData = require('./routes/storage/datastorage');
 const pagosV2Router = require('./routes/ApiPagosV2');
+const mailRouter = require('./routes/Mails');
+const testMultiRouter = require('./routes/testmulti');
 
 //utils
+app.post('/api/mail/mailtesting', mailRouter)
 app.post('/api/testguardado', utilsRouter);
 app.post('/api/decript', utilsRouter);
 app.post('/api/subastas/encrypt', utilsRouter);

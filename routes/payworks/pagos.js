@@ -78,9 +78,9 @@ const datosPW2 = (reference) => {
             //prestamos y vales
             const connection = await cnn.createConnection(configMaxilanaDB);
             await connection.connect()
-            const query = `select * from respuestaspp_pw2 where control_number = '${reference}'`;
-            const query2 = `select * from respuestaspw2 where control_number = '${reference}'`;
-            const query3 = `select * from respuestaspw2remates where control_number = '${reference}'`;
+            const query = `select * from respuestaspp_pw2 where reference = '${reference}'`;
+            const query2 = `select * from respuestaspw2 where reference = '${reference}'`;
+            const query3 = `select * from respuestaspw2remates where reference = '${reference}'`;
             connection.query(query, (errorq, results, fields) => {
                 if (errorq) {
                     connection.end((errorend)=>{
