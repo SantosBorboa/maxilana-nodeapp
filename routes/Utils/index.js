@@ -95,30 +95,13 @@ Router.post('/api/subastas/decrypt',  (req, res) => {
 });
 Router.post('/api/email/reenvio', (req, res, next)=>{
 })
-Router.post('/api/sendmailprueba', (req, res, next) => {
-    const nombre = req.body.nombre
-    const celular = req.body.celular
-    const domicilio = req.body.domicilio
-    const colonia = req.body.colonia
-    const cp = req.body.cp
-    const municipio = req.body.municipio
-    const estado = req.body.estado
-    const instrucciones = req.body.instrucciones
-    const articulo = req.body.articulo
-    const upc = req.body.upc
-    const monto = req.body.monto
-    const envio = req.body.envio
-    const total = req.body.total;
-    const correopersonal = req.body.correopersonal
-    const correoenvio = req.body.correoenvio
-    const sucursal = req.body.sucursal
-    const entregarsucursal = req.body.entregarsucursal?req.body.entregarsucursal == '1'?true:false:false
-    const envsuc = req.body.enviosucursal;
-    email.sendemail(nombre, celular, domicilio, colonia, 
-        cp, municipio, estado, instrucciones, 
-        articulo, upc, monto, envio, total, correopersonal, correoenvio, sucursal, entregarsucursal).then((response) => {
-
-    });
-    return res.send({ ok: 'ok' })
+Router.post('/api/emailremates', async (req, res, next) => {
+    try {
+        const {nombre, celular, domicilio, colonia, cp, municipio, estado, instrucciones, articulo, upc, monto, envio, total, correopersonal, correoenvio, sucursal, entregarsucursal} = req.body;
+        const respMail = await email.sendemail(nombre, celular, domicilio, colonia, cp, municipio, estado, instrucciones, articulo, upc, monto, envio, total, correopersonal, correoenvio, sucursal, entregarsucursal)
+        return res.send(respMail)
+    } catch (error) {
+        return res.send({error})
+    }
 });
 module.exports = Router;

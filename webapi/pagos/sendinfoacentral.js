@@ -49,7 +49,9 @@ const grabardatos = async (reference, control_number, cust_req_date, auth_req_da
                 con.connection.query(query3,async function (error, results, fields) {
                     if (results != undefined) {
                         let query2 = 'update from articulodelmesapp set codigo=""';
-                        const res = await con.connection.query(query2);
+                        con.connection.query(query2, function (error, results, fields) {
+                            resolve(data.response[0]);
+                        });
                     } else {
                         //resolve(data.response[0]);
                     }
@@ -342,10 +344,19 @@ const grabardatosprestamopersonalyvale = async (reference, control_number, cust_
         monto = monto ? monto : 'NULL';
         let query = 'insert into respuestaspp_pw2(reference,control_number,cust_req_date,auth_req_date,auth_rsp_date,cust_rsp_date,payw_result,auth_result,payw_code,auth_code,text,card_holder,issuing_bank,card_brand,card_type,tarjeta,correoelectronico,monto,codigosucursal,codigoprestamo,esvale,enviado) values ' +
             '(' + "'" + reference + "'" + ', ' + "'" + control_number + "'" + ', ' + "'" + cust_req_date + "'" + ', ' + "'" + auth_req_date + "'" + ', ' + "'" + auth_rsp_date + "'" + ', ' + "'" + cust_rsp_date + "'" + ', ' + "'" + payw_result + "'" + ', ' + "'" + auth_result + "'" + ', ' + "'" + payw_code + "'" + ', ' + "'" + auth_code + "'" + ', ' + "'" + text + "'" + ', ' + "'" + card_holder + "'" + ', ' + "'" + ussuing_bank + "'" + ', ' + "'" + card_brand + "'" + ', ' + "'" + card_type + "'" + ', ' + "'" + tarjeta + "'" + ', ' + "'" + correoelectronico + "'" + ', ' + "'" + monto + "'" + ',' + codigosucursal + ',' + "'" + codigoprestamo + "'" + ',' + "'" + esvale + "'" + ',0)';
-        console.log(query);
         con.connection.query(query, function (error, results, fields) {
+            if(error){ 
+                Logger('ErrorPPyVale', 'insert respuestaspp', {query})
+            }else{
+                Logger('PPyVale', 'insert respuestaspp', {query})
+            }
             let query2 = 'select id from respuestaspp_pw2 where reference=' + "'" + reference + "'";
             con.connection.query(query2, function (error, results, fields) {
+                if(error){ 
+                    Logger('ErrorPPyVale', 'select respuestaspp', {query})
+                }else{
+                    Logger('PPyVale', 'select respuestaspp', {query})
+                }
                 if (results != undefined) {
                     Resultado = JSON.parse(JSON.stringify(results));
                     obtenernonce(correoelectronico).then(response => {
@@ -375,8 +386,10 @@ const grabardatosprestamopersonalyvale = async (reference, control_number, cust_
                             codigoprestamo: codigoprestamo
                         };
                         soap.createClient(url, function (err, client) {
-                            if (err) console.error(err);
-                            else {
+                            if (err) {
+                                console.error(err);
+                                Logger('ErrorPPyVale', 'create client', {url})
+                            } else {
                                 if (esvale == 1) {
                                     let data = {
                                         strCodigoDistribuidor: codigoprestamo,
@@ -386,8 +399,11 @@ const grabardatosprestamopersonalyvale = async (reference, control_number, cust_
 
                                     console.log(args)
                                     client.PagosEnLineaValesAplicarPago(args, function (err, response) {
-                                        if (err) console.error(err);
-                                        else {
+                                        if (err) {
+                                            console.error(err);
+                                            Logger('ErrorPPyVale', 'PagosEnLineaValesAplicarPago WS', {args});
+                                        } else {
+                                            Logger('PPyVale', 'PagosEnLineaValesAplicarPago WS', {args});
                                             result = JSON.parse(JSON.stringify(response));
                                             resolve(result);
                                         }
@@ -401,8 +417,11 @@ const grabardatosprestamopersonalyvale = async (reference, control_number, cust_
                                     Object.assign(args, data);
                                     console.log(args)
                                     client.PagosEnLineaPrestamosPersonalesAplicarPago(args, function (err, response) {
-                                        if (err) console.error(err);
-                                        else {
+                                        if (err) {
+                                            console.error(err);
+                                            Logger('ErrorPPyVale', 'PagosEnLineaPrestamosPersonalesAplicarPago WS', {args});
+                                        } else {
+                                            Logger('PPyVale', 'PagosEnLineaPrestamosPersonalesAplicarPago WS', {args});
                                             result = JSON.parse(JSON.stringify(response));
                                             resolve(result);
                                         }

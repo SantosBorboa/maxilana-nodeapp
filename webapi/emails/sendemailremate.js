@@ -1,8 +1,8 @@
 const mailer = require('../../node_modules/nodemailer');
+const Logger = require('../../Middlewares/logger.js');
+const MailConf = require('../../config/mail.js');
 
-let sendemail = function datos(nombrerecibe, celular, domicilio, colonia, codigopostal, municipio, Estado, instruccion, articulo, upc, monto, envio, total, personal, correo, sucursal, entregasucursal = false) {
-
-
+const sendemail =  (nombrerecibe, celular, domicilio, colonia, codigopostal, municipio, Estado, instruccion, articulo, upc, monto, envio, total, personal, correo, sucursal, entregasucursal = false) => {
   var hoy = new Date();
   var hoy2 = new Date();
 
@@ -206,7 +206,7 @@ let sendemail = function datos(nombrerecibe, celular, domicilio, colonia, codigo
       if (!error) {
         return resolve(true)
       } else {
-        return reject(error)
+        return resolve(error)
       }
     });
   });
@@ -425,7 +425,7 @@ let sendemailprueba = async function datos(data, nombrerecibe, celular, domicili
       } else {
         CreateTransport.close();
       }
-
+      return resolve(email);
     });
   });
 }
