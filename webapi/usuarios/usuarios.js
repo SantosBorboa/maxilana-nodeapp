@@ -65,11 +65,11 @@ const consultarmonedero = (usuario) => {
     })
 }
 let consultarLogin = async function consultar(celular, correo, password) {
-    var url = "api/Usuarios/Cusuario/" + celular + "/Correo/" + correo + "/Contrasena/" + password;
+    var url = "https://grupoalvarez.com.mx:4430/maxilanaApp/api/Usuarios/Cusuario/" + celular + "/Correo/" + correo + "/Contrasena/" + password;
     return new Promise(function (resolve, reject) {
-        request('https://grupoalvarez.com.mx:4430/maxilanaApp/' + url, function (error, response, body) {
+        request(url, function (error, response, body) {
             var response = JSON.parse(body);
-            response = response.data.response[0];
+            response = response.data?.response[0];
             response = response ? response : undefined;
             if (response !== undefined) {
                 resolve(response);
