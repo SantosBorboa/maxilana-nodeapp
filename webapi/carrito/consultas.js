@@ -311,7 +311,7 @@ let Agregarcarrito = async function consultar(orden, codigo) {
     return new Promise(function (resolve, reject) {
         let query = consulta;
         con.connection.query(query, function (error, results, fields) {
-            let body = JSON.parse(results[0]['contenido']);
+            let body = results[0]['contenido'];//JSON.parse(results[0]['contenido']);
             let array = [];
             for (var i = 0; i < body.length; i++) {
                 array.push({

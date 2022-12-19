@@ -11,7 +11,7 @@ let sendemail = async function datos(cliente, codigosucursal, sucursal, boleta, 
       "auth": {
         "type": "login",
         "user": "webmaxilana@maxilana.com",
-        "pass": "M@xiW3b2022"
+        "pass": "Sud32487"
       }
       // "auth":{ 
       //         "type":"login", 
@@ -145,7 +145,7 @@ let sendemail = async function datos(cliente, codigosucursal, sucursal, boleta, 
         CreateTransport.close();
         reject(error);
       }
-
+      return resolve(email)
     });
   });
 
@@ -172,7 +172,7 @@ let sendemailprueba = async function datos(cliente, importe, autorizacion, refer
       "auth": {
         "type": "login",
         "user": "webmaxilana@maxilana.com",
-        "pass": "M@xiW3b2022"
+        "pass": "Sud32487"
       }
     };
     body = body + '<table id="m_-6863763375563930348container" style="width:640px;color:rgb(51,51,51);margin:0 auto;border-collapse:collapse">';
@@ -295,12 +295,11 @@ let sendemailprueba = async function datos(cliente, importe, autorizacion, refer
     CreateTransport.sendMail(email, function (error, info) {
       if (!error) {
         CreateTransport.close();
-        resolve(info);
       } else {
         console.log(error)
         CreateTransport.close();
-        reject(error);
       }
+      resolve(info);
     });
   });
 
@@ -336,7 +335,7 @@ let sendemailmultiple = async function datos(cliente, importe, autorizacion, ref
       "auth": {
         "type": "login",
         "user": "webmaxilana@maxilana.com",
-        "pass": "M@xiW3b2022"
+        "pass": "Sud32487"
       }
     };
     body = body + '<table id="m_-6863763375563930348container" style="width:640px;color:rgb(51,51,51);margin:0 auto;border-collapse:collapse">';
@@ -463,7 +462,7 @@ let sendemailmultiple = async function datos(cliente, importe, autorizacion, ref
       } else {
         console.log(error);
         CreateTransport.close();
-        reject(error);
+        resolve(info);
       }
 
     });

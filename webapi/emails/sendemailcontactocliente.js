@@ -8,7 +8,7 @@ let sendemail = async function datos(tema, nombre, correoelectronico, ciudad, as
       "auth": {
         "type": "login",
         "user": "webmaxilana@maxilana.com",
-        "pass": "M@xiW3b2022"
+        "pass": "Sud32487"
       }
     };
     let body = '<table id="m_-6863763375563930348container" style="width:640px;color:rgb(51,51,51);margin:0 auto;border-collapse:collapse">';
@@ -134,7 +134,7 @@ let sendemail = async function datos(tema, nombre, correoelectronico, ciudad, as
       } else {
         CreateTransport.close();
       }
-
+      resolve(info)
     });
   });
 
