@@ -6,7 +6,74 @@ const email = require('../../webapi/emails/sendemailremate');
 const listEndpoints = require('express-list-endpoints');
 var uniqid = require("uuid");
 const fs = require('fs');
+const xml2JS = require('xml2js');
+const multer  = require('multer')
+const upload = multer({ dest: 'uploads/' })
+const path = require('path');
+const { artifactregistry_v1beta1 } = require('googleapis');
+const e = require('express');
 
+const {VerifySQLdata} = require('../../controllers/tools.js');
+
+Router.post('/api/utils/xmlconverter', upload.single('archivoxml'), (req, res, next)=>{
+    try {
+        const { file } = req;
+        if(!file) return res.send({error:'no se ha especificado el archivo xml correctamente.'});
+        const pathtoFile = path.join(__dirname, `../../uploads/${file.filename}`)
+        const xmlreaded = fs.readFileSync(pathtoFile,{encoding:'utf8', flag:'r'});
+        xml2JS.parseString(xmlreaded,{mergeAttrs:true}, async(err, result)=>{
+            if(err) return res.send(err);
+            fs.rmSync(pathtoFile);
+            const {Transaccion} = result.transacciones;
+            const arrTransacciones = Transaccion.map((el)=>{
+                const o = {
+                    afiliacion:el.afiliacion[0].numero[0],
+                    referencia:el.referencia[0],
+                    numeroControl:el.numeroControl[0],
+                    codigoAutorizacion:el.codigoAutorizacion[0],
+                    infoTarjeta:el.infoTarjeta[0].numeroTarjetaOfuscado[0],
+                    tipo:el.tipo[0],
+                    modo:el.modo[0],
+                    monto:Intl.NumberFormat('es-MX', { minimumFractionDigits: 2}).format(parseFloat(el.monto[0])),
+                    refCliente1:el.refCliente1[0],
+                    refCliente2:el.refCliente2[0],
+                    refCliente3:el.refCliente3[0],
+                    estado:el.estado[0],
+                    resultadoPayworks: el.resultadoPayworks[0],
+                    textoAdicional:el.textoAdicional[0],
+                    fecha:el.fechaRecepCteFECHA[0],
+                    hora:el.fechaRecepCteHORA[0],
+                }
+                return o;
+            })
+                       
+            const arrref = arrTransacciones.filter((el)=>{return el.refCliente2.includes('R-') && el.resultadoPayworks == 'APROBADA'});
+            const arrpp = arrTransacciones.filter((el)=>{return el.refCliente2.includes('P-') && el.resultadoPayworks == 'APROBADA'});
+            const arrvta = arrTransacciones.filter((el)=>{return el.refCliente2.includes('V') && el.resultadoPayworks == 'APROBADA'});
+            
+            const listaRef = arrref.reduce((acc, el) => { return acc += `${acc==''?el.referencia:','+el.referencia}` }, '');
+            const listaPP = arrpp.reduce((acc, el) => { return acc += `${acc==''?el.referencia:','+el.referencia}` }, '');
+            const listaVtas = arrvta.reduce((acc, el) => { return acc += `${acc==''?el.referencia:','+el.referencia}` }, '');
+            
+            const oReturn = {
+                listaRef,
+                listaPP,
+                listaVtas,
+                totalBoletas:arrref.length,
+                totalPP:arrpp.length,
+                totalVtas:arrvta.length,
+                boletas:arrref,
+                pp:arrpp,
+                vtas:arrvta,
+            }
+            const dsql = await VerifySQLdata(oReturn);
+            oReturn.dsql = dsql;
+            return res.send(oReturn);
+        })
+    } catch (error) {
+        return res.send(error.message)
+    }
+});
 Router.get('/api/reset', (req, res) => {
     var id = uniqid.v4();
     fs.writeFile('./tmp/restart.txt', id, 'utf-8', function (err, data) {

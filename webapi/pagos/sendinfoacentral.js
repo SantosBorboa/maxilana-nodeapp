@@ -388,7 +388,8 @@ const grabardatosprestamopersonalyvale = async (reference, control_number, cust_
                         soap.createClient(url, function (err, client) {
                             if (err) {
                                 console.error(err);
-                                Logger('ErrorPPyVale', 'create client', {url})
+                                Logger('ErrorPPyVale', 'create client', {url});
+                                resolve(err);
                             } else {
                                 if (esvale == 1) {
                                     let data = {
@@ -402,6 +403,7 @@ const grabardatosprestamopersonalyvale = async (reference, control_number, cust_
                                         if (err) {
                                             console.error(err);
                                             Logger('ErrorPPyVale', 'PagosEnLineaValesAplicarPago WS', {args});
+                                            resolve(err);
                                         } else {
                                             Logger('PPyVale', 'PagosEnLineaValesAplicarPago WS', {args});
                                             result = JSON.parse(JSON.stringify(response));
@@ -420,6 +422,7 @@ const grabardatosprestamopersonalyvale = async (reference, control_number, cust_
                                         if (err) {
                                             console.error(err);
                                             Logger('ErrorPPyVale', 'PagosEnLineaPrestamosPersonalesAplicarPago WS', {args});
+                                            resolve(err);
                                         } else {
                                             Logger('PPyVale', 'PagosEnLineaPrestamosPersonalesAplicarPago WS', {args});
                                             result = JSON.parse(JSON.stringify(response));
@@ -430,7 +433,6 @@ const grabardatosprestamopersonalyvale = async (reference, control_number, cust_
                             }
                         });
                     });
-
                 } else {
                     resolve("No hay información para mostrar.")
                 }

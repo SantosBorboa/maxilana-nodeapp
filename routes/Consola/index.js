@@ -5,6 +5,7 @@ const pagosempeno = require('../../consola/empeno');
 const users = require('../../webapi/usuarios/usuarios');
 const soap = require("../../node_modules/soap");
 const utf8 = require('utf8');
+const con = require('../../db/conexion');
 
 Router.post('/api/consola/login', (req, res) => {
     const { user, password } = req.body
@@ -20,6 +21,32 @@ Router.post('/api/consola/login', (req, res) => {
         return res.send({error:'Favor de validar la información enviada.'})
     }
 })
+Router.post('/api/consola/pagos/ventas/mysql', async (req, res, next)=>{
+    try {
+        const stQuery = `select i.id, i.idPrincipal, resp.reference, i.codigosucursal, i.upc, tds.status,
+        tds.cardtype, ienv.nombre, ienv.celular, ienv.correoelectronico,
+        ienv.direccion, ienv.codigopostal, ienv.colonia,ienv.municipio,ienv.municipio,
+        ienv.estado,ienv.fecha,ienv.instrucciones,plz.correoparaconfirmaciondecompra,
+        suc.correoelectronico as correosucursal 
+        from informacionTransaccionVentas i,
+        informacion3dsecure tds, 
+        informacionEnvioArticulos ienv,
+        respuestaspw2remates resp,
+        sucursales suc,
+        plazas plz
+        where tds.reference = i.idPrincipal
+        and ienv.id = i.idPrincipal
+        and suc.numero = i.codigosucursal
+        and plz.codigo = suc.ciudad
+        and resp.control_number = i.idPrincipal
+        and resp.payw_result = 'A' and resp.text = 'Aprobado'
+        order by i.fecha desc`;
+        const resp = await con.connection.promise().query(stQuery)
+        return res.send(resp);
+    } catch (error) {
+        return res.send({error})
+    }
+});
 Router.get('/api/consola/pagos/ventas', (req, res) => {
     var tipo = req.query.tipo ? req.query.tipo : 1;
     var upc = req.query.upc ? req.query.upc : 0;

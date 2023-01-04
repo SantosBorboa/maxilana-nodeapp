@@ -105,7 +105,23 @@ const guardarErrores3dSecureRemates = ({
         })
     })
 }
-
+const GetIdentificadorSucursal = async (sucursal) => {
+    return new Promise((resolve, reject)=>{
+        const query = `select identificador from sucursales where numero = ${sucursal}`;
+        const mysConn = conn.createConnection(configMaxilanaDB);
+        mysConn.connect((conError)=>{
+            if(conError){return reject(undefined)}
+            mysConn.query(query, function (errorqry, results, fields) {
+                if (errorqry) return reject(undefined);
+                mysConn.end((errorend) => {
+                    if (errorend) return reject(undefined);
+                    const {identificador} = results[0];
+                    resolve(identificador);
+                });
+            })
+        })
+    });
+};
 Router.post('/api/card/checkcreditcard', (req, res, next) => {
     const card = req.body.card ? req.body.card : undefined;
     if (card) {
@@ -191,7 +207,7 @@ Router.post('/api/pagos/3dsecure/app/producto/v1', (req, res, next) => {
         res.status(400).send(ex);
     }
 });
-Router.post('/api/pagos/3dsecure/app/boleta/v1', (req, res, next) => {
+Router.post('/api/pagos/3dsecure/app/boleta/v1', async (req, res, next) => {
     try {
         const importe = req.body.importe ? req.body.importe : 0;
         const sucursal = req.body.sucursal ? req.body.sucursal : 0;
@@ -214,6 +230,17 @@ Router.post('/api/pagos/3dsecure/app/boleta/v1', (req, res, next) => {
         const fConsulta = req.body.fechaconsulta;
         const diasPagados = req.body.diaspagados;
         const titular = `${Name} ${LastName}`;
+        //const identificador = await GetIdentificadorSucursal(sucursal);
+        //PRUEBAS DE GUARDADO EN INFORMACIÓN.
+        // secureboleta.Obteneridboletav3('', '', '', '', email, importe, sucursal, boleta, montoboleto, codigotpago, fConsulta, diasPagados, PhoneNumber, TypeCard, Street, Country, State, City, PostalCode).then(respuesta => {
+        //     const token = jwt.sign(jwtConfig.data, jwtConfig.jwtSecretKey);
+        //     let jsonRes = {
+        //         JsonWebToken: token,
+        //         Resultado: respuesta
+        //     }
+        //     res.status(200).send(jsonRes);
+        // });
+        /// FIN PRUEBAS GUARDADO INFORMACIÓN.
 
         var encrypTitular = '';
         var encrypTarjeta = '';
@@ -240,7 +267,7 @@ Router.post('/api/pagos/3dsecure/app/boleta/v1', (req, res, next) => {
                 });
             });
         }).catch(err => { res.status(400).send(err) });
-    } catch {
+    } catch (ex) {
         res.status(400).send(ex);
     }
 });

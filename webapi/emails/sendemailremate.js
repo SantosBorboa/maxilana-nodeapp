@@ -32,7 +32,7 @@ const sendemail =  (nombrerecibe, celular, domicilio, colonia, codigopostal, mun
       "auth": {
         "type": "login",
         "user": "webmaxilana@maxilana.com",
-        "pass": "Sud32487"
+        "pass": "Fun06196"
       }
     };
     let body = '<table id="m_-6863763375563930348container" style="width:640px;color:rgb(51,51,51);margin:0 auto;border-collapse:collapse">';
@@ -245,7 +245,7 @@ let sendemailprueba = async function datos(data, nombrerecibe, celular, domicili
       "auth": {
         "type": "login",
         "user": "webmaxilana@maxilana.com",
-        "pass": "Sud32487"
+        "pass": "Fun06196"
       }
     };
     let body = '<table id="m_-6863763375563930348container" style="width:640px;color:rgb(51,51,51);margin:0 auto;border-collapse:collapse">';
@@ -418,14 +418,14 @@ let sendemailprueba = async function datos(data, nombrerecibe, celular, domicili
       html: body // cuerpo
     };
 
-    let CreateTransport = mailer.createTransport(jConfig);
+    let CreateTransport = mailer.createTransport(MailConf);
     CreateTransport.sendMail(email, function (error, info) {
       if (!error) {
         CreateTransport.close();
       } else {
         CreateTransport.close();
       }
-      return resolve(email);
+      return resolve(info);
     });
   });
 }

@@ -10,7 +10,7 @@ let sendemail = async function datos(ciudad,marca,modelo,tipo,cantidad,correo,te
             "auth":{ 
                     "type":"login", 
                     "user":"webmaxilana@maxilana.com", 
-                    "pass":"Sud32487" 
+                    "pass":"Fun06196" 
                 }
             };
     let body ='<table id="m_-6863763375563930348container" style="width:640px;color:rgb(51,51,51);margin:0 auto;border-collapse:collapse">';
