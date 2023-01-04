@@ -183,7 +183,7 @@ const informacion3dsecure = async (reference) => {
 }
 const Obteneridboletav3 = async (Tarjeta, Vencimiento, Ccv, TarjetaHabiente, correoelectronico, Monto, Sucursal, boleta, montoboleta, codigotipopago, fechac, diaspagados, PhoneNumber, typeCard, street, country, state, city, postalCode) => {
     return new Promise(function (resolve, reject) {
-        let Validate = 'SELECT * FROM `respuestaspw2` where boleta=' + boleta + " AND CAST(fecha as DATE) = CAST(NOW() AS DATE) AND payw_result = 'A' ";
+        let Validate = 'SELECT * FROM `respuestaspw2` where boleta=' + boleta + " AND CAST(fecha as DATE) = CAST(NOW() AS DATE) AND payw_result = 'A' and text = 'Aprobado' ";
         con.connection.query(Validate, function (error, results, fields) {
             if(error) {return reject(error)}
             let resul = JSON.parse(JSON.stringify(results));
@@ -200,8 +200,18 @@ const Obteneridboletav3 = async (Tarjeta, Vencimiento, Ccv, TarjetaHabiente, cor
                         let id = uniqid.v4();
                         id = id.toString().replace(/[^a-zA-Z0-9]/g, '');
                         id = id.toString().substr(0, 15);
-                        let query = 'insert into informacionpw2(idPrincipal, id, tarjeta, vencimiento, cvv2, nombre, correoelectronico, monto, codigosucursal, identificador, boleta, montoboleta, fecha, codigotipopago, fechaconsulta, diaspagados, celular, typecard, street, country, state, city, postalcode) values ' +
-                            '(' + "'" + id + "'" + ', ' + "'" + id + "'" + ', ' + "'" + Tarjeta + "'" + ', ' + "'" + Vencimiento + "'" + ', ' + "'" + Ccv + "'" + ', ' + "'" + TarjetaHabiente + "'" + ', ' + "'" + correoelectronico + "'" + ', ' + "'" + Monto + "'" + ', ' + "'" + Sucursal + "'" + ', ' + "'" + Sucursal + "'" + ',' + "'" + boleta + "'" + ',' + "'" + montoboleta + "'" + ', now(),' + codigotipopago + ",'" + fechac + "','" + diaspagados + "'" + ",'" + PhoneNumber + "'" + ', ' + "'" + typeCard + "'" + ",'" + street + "'" + ', ' + "'" + country + "'" + ",'" + state + "'" + ', ' + "'" + city + "'" + ",'" + postalCode + "'" + ')';
+                        const query = `insert into informacionpw2
+                        (idPrincipal, id, tarjeta, vencimiento, cvv2, nombre, correoelectronico, 
+                            monto, codigosucursal, identificador, boleta, montoboleta, fecha, 
+                            codigotipopago, fechaconsulta, diaspagados, celular, typecard, 
+                            street, country, state, city, postalcode) values 
+                            ('${id}', '${id}', '${Tarjeta}', '${Vencimiento}', '${Ccv}', '${TarjetaHabiente}', 
+                            '${correoelectronico}', '${Monto}', '${Sucursal}', (select identificador from sucursales where numero = ${Sucursal}),'${boleta}',
+                            '${montoboleta}', now(), '${codigotipopago}'  ,'${fechac}','${diaspagados}'  ,'${PhoneNumber}', 
+                            '${typeCard}'  ,'${street} ', '${country}'  ,'${state}', '${city}'  ,'${postalCode}')
+                        `;
+                        // let query = 'insert into informacionpw2(idPrincipal, id, tarjeta, vencimiento, cvv2, nombre, correoelectronico, monto, codigosucursal, identificador, boleta, montoboleta, fecha, codigotipopago, fechaconsulta, diaspagados, celular, typecard, street, country, state, city, postalcode) values ' +
+                        //     '(' + "'" + id + "'" + ', ' + "'" + id + "'" + ', ' + "'" + Tarjeta + "'" + ', ' + "'" + Vencimiento + "'" + ', ' + "'" + Ccv + "'" + ', ' + "'" + TarjetaHabiente + "'" + ', ' + "'" + correoelectronico + "'" + ', ' + "'" + Monto + "'" + ', ' + "'" + Sucursal + "'" + ', ' + "'" + identificador + "'" + ',' + "'" + boleta + "'" + ',' + "'" + montoboleta + "'" + ', now(),' + codigotipopago + ",'" + fechac + "','" + diaspagados + "'" + ",'" + PhoneNumber + "'" + ', ' + "'" + typeCard + "'" + ",'" + street + "'" + ', ' + "'" + country + "'" + ",'" + state + "'" + ', ' + "'" + city + "'" + ",'" + postalCode + "'" + ')';
                         console.log(query)
                         con.connection.query(query, function (error, results, fields) {
                             if(error) {return reject(error)}

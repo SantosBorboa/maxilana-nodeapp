@@ -44,17 +44,17 @@ Router.post('/api/pagos/2dsecure/web/boletas', async (req, res, next) => {
         const ccvdecrypt = await libsodium.desencriptar(datainfo[0].ccv2)
 
         const { ...data } = await pw2empeno.ejecutarcobrov5(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, total, boletareference, datainfo[0].status, datainfo[0].eci, datainfo[0].xid, datainfo[0].cavv)
-        const respGrabarDatosEmpeno = await sendinfo.grabardatosempenoprueba(data.referencia?data.referencia:1, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo, 1)
+        const respGrabarDatosEmpeno = await sendinfo.grabardatosempenoprueba(data.referencia ? data.referencia : 1, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo, 1)
         let dataResponse = {
             Resultado: false,
             Mensaje: data.resultado_payw == 'A' ? 'Aprobado' : data.texto,
         }
         if (data.resultado_payw == "A") {
-            dataBack.Resultado = true;
+            dataResponse.Resultado = true;
             const respEmail = await emailempeno.sendemailprueba(Cliente, total, data.codigo_aut, data.referencia, datainfo[0].fecha, datainfo[0].correoelectronico, datainfo[0])
-                // .then(respMail => {
-                //     res.status(200).send(JSON.stringify(error));
-                // })
+            // .then(respMail => {
+            //     res.status(200).send(JSON.stringify(error));
+            // })
         }
         res.send(dataResponse)
 
@@ -107,9 +107,70 @@ Router.post('/api/pagos/2dsecure/web/boletas', async (req, res, next) => {
         // }).catch(error => {
         //     return res.status(400).send(error);
         // });
-        
+
     } catch (ex) {
         res.status(400).send(ex);
+    }
+});
+Router.post('/api/pagos/2dsecure/reenviocorreo', async (req, res, next) => {
+    const { Tipo, Reference3D, correo, correobcc, correosuc } = req.body;
+    if(!Tipo || Tipo == ''){return res.send({error:'No se puede generar correo sin especificar el tipo.'})};
+
+    switch (Tipo) {
+        case 'prod':
+            // return res.send({error:'No sirve porque no hay información del carrito en remates(upc).'});
+            // break;
+            const { orden } = req.body;
+            const datainfo = await GetInfoProducto(Reference3D);
+            console.log(datainfo[0]);
+            const ResOrden = await carrito.Obtenercarritoventas(orden);
+            
+            const cliente = datainfo[0].nombre;
+            const domicilio = datainfo[0].direccion;
+            const cp = datainfo[0].codigopostal;
+            const colonia = datainfo[0].colonia;
+            const municipio = datainfo[0].municipio;
+            const estado = datainfo[0].estado;
+            const correoelectronico = correo//datainfo[0].correoelectronico;
+            const correoparaconfirmaciondecompra = correo//datainfo[0].correoparaconfirmaciondecompra;
+            const correosucursal = correo//datainfo[0].correosucursal;
+            const CorreoPersonal = correoparaconfirmaciondecompra + "," + correosucursal;
+            const instrucciones = datainfo[0].instrucciones;
+            const celular = datainfo[0].celular;
+
+            const respEmail = await email.sendemailprueba(ResOrden, cliente, celular, domicilio, colonia, cp, municipio, estado, instrucciones, CorreoPersonal, correoelectronico, orden);
+            return res.send(respEmail);
+            break;
+        case 'pyv':
+            try {
+                const datainfopyv = await pw2valesyprestamos.Obtenerdatos(Reference3D, undefined, undefined, undefined, undefined, undefined);
+                const datainfo = datainfopyv[0];
+                const resp = await GetRespuestasPW2(Reference3D, Tipo);
+
+                await sms.send(datainfo.celular, "Se aplicó un pago al distribuidor: " + datainfo.codigoprestamo + " por un monto de : $" + datainfo.monto);
+                await sms.sendInfoCentral(datainfo.celular, "Se aplicó un pago a la distribuidora: " + datainfo.codigoprestamo + " por un monto de : $" + datainfo.monto);
+            } catch (error) {
+                return res.send({error:error.message});
+            }
+            break;
+        case 'boletas':
+            try {
+                const datainfob = await pw2empeno.ObtenerdatosboletasPrueba(Reference3D, '', '', '', undefined, '');
+                const resp = await GetRespuestasPW2(Reference3D, Tipo);
+                const Cliente = await libsodium.desencriptar(resp[0].nombre);
+                const data = resp[0];
+                boletareference = Math.floor(datainfob[0].boleta);
+                
+                datainfob[0].correoelectronicoparanotificacion = correobcc?correobcc:datainfob[0].correoelectronicoparanotificacion;
+                datainfob[0].correoelectronico = correo?correo:datainfob[0].correoelectronico;
+                datainfob[0].correosucursal = correosuc?correosuc:datainfob[0].correosucursal; 
+
+                const respEmailb = await emailempeno.sendemailprueba(Cliente, data.monto, data.auth_code, data.reference, datainfob[0].fecha, datainfob[0].correoelectronico, datainfob[0])
+                return res.send(respEmailb);
+            } catch (error) {
+                return res.send({error:error.message});
+            }
+            break;
     }
 });
 Router.post('/api/pagos/2dsecure/web/producto', async (req, res, next) => {
@@ -142,7 +203,7 @@ Router.post('/api/pagos/2dsecure/web/producto', async (req, res, next) => {
         if (respuesta.resultado_payw == 'A') {
             const data = respuesta;
             const ResOrden = await carrito.Obtenercarritoventas(orden);
-            const sendInfoResp = await sendinfo.grabardatosremates(data.referencia?data.referencia:1, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo, 1, ResOrden);
+            const sendInfoResp = await sendinfo.grabardatosremates(data.referencia ? data.referencia : 1, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo, 1, ResOrden);
             let cliente = datainfo[0].nombre;
             let domicilio = datainfo[0].direccion;
             let cp = datainfo[0].codigopostal;
@@ -310,7 +371,7 @@ Router.post('/api/pagos/2dsecure/vales', async (req, res, next) => {
                         pw2valesyprestamos.ejecutarventav1(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, datainfo.status, datainfo.eci, datainfo.xid, datainfo.cavv, 1).then(async (respuesta) => {
                             const i = respuesta;
                             if (i.resultado_payw == "A") {
-                                sendinfo.grabardatosprestamopersonalyvale(i.referencia?i.referencia:1, Reference3D, i.fecha_req_cte, i.auth_req_date, i.auth_rsp_date, i.fecha_rsp_cte, i.resultado_payw, i.auth_result, i.payw_code, i.codigo_aut, i.texto, i.card_holder, i.issuing_bank, i.card_brand, i.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, 1).then(async (response) => {
+                                sendinfo.grabardatosprestamopersonalyvale(i.referencia ? i.referencia : 1, Reference3D, i.fecha_req_cte, i.auth_req_date, i.auth_rsp_date, i.fecha_rsp_cte, i.resultado_payw, i.auth_result, i.payw_code, i.codigo_aut, i.texto, i.card_holder, i.issuing_bank, i.card_brand, i.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, 1).then(async (response) => {
                                     let Res = {
                                         Resultado: true,
                                         Mensaje: 'Aprobado'
@@ -320,7 +381,7 @@ Router.post('/api/pagos/2dsecure/vales', async (req, res, next) => {
                                     res.status(200).send(Res)
                                 })
                             } else {
-                                sendinfo.grabardatosprestamopersonalyvale(i.referencia?i.referencia:1, Reference3D, i.fecha_req_cte, i.auth_req_date, i.auth_rsp_date, i.fecha_rsp_cte, i.resultado_payw, i.auth_result, i.payw_code, i.codigo_aut, i.texto, i.card_holder, i.issuing_bank, i.card_brand, i.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, 1).then(response => {
+                                sendinfo.grabardatosprestamopersonalyvale(i.referencia ? i.referencia : 1, Reference3D, i.fecha_req_cte, i.auth_req_date, i.auth_rsp_date, i.fecha_rsp_cte, i.resultado_payw, i.auth_result, i.payw_code, i.codigo_aut, i.texto, i.card_holder, i.issuing_bank, i.card_brand, i.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, 1).then(response => {
                                     let Res = {
                                         Resultado: false,
                                         Mensaje: i.texto
@@ -365,7 +426,7 @@ Router.post('/api/pagos/2dsecure/pp', async (req, res, next) => {
 
         const respuestapw2 = await pw2valesyprestamos.ejecutarventav1(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, datainfo.status, datainfo.eci, datainfo.xid, datainfo.cavv, 1);
         const { ...i } = respuestapw2;
-        sendinfo.grabardatosprestamopersonalyvale(i.referencia?i.referencia:1, Reference3D, i.fecha_req_cte, i.auth_req_date, i.auth_rsp_date, i.fecha_rsp_cte, i.resultado_payw, i.auth_result, i.payw_code, i.codigo_aut, i.texto, i.card_holder, i.issuing_bank, i.card_brand, i.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, 0).then(async (response) => {
+        sendinfo.grabardatosprestamopersonalyvale(i.referencia ? i.referencia : 1, Reference3D, i.fecha_req_cte, i.auth_req_date, i.auth_rsp_date, i.fecha_rsp_cte, i.resultado_payw, i.auth_result, i.payw_code, i.codigo_aut, i.texto, i.card_holder, i.issuing_bank, i.card_brand, i.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.codigoprestamo, 0).then(async (response) => {
             let Res = {
                 Resultado: false,
                 Mensaje: i.resultado_payw == 'A' ? 'Aprobado' : i.texto,
@@ -409,7 +470,7 @@ Router.post('/api/pagos/2dsecure/producto/v1', (req, res, next) => {
                     ccvdecrypt = respuesta;
                     pw2remates.ejecutarventav2(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, datainfo.monto, datainfo.codigosucursal, datainfo.upc, datainfo.status, datainfo.eci, datainfo.xid, datainfo.cavv, Reference3D).then(respuesta => {
                         const { ...data } = respuesta;
-                        sendinfo.grabardatos(data.referencia?data.referencia:1, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.upc, costoenvio, datainfo.precioneto, Seguro, ClickCollect).then(async (respuesta) => {
+                        sendinfo.grabardatos(data.referencia ? data.referencia : 1, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.upc, costoenvio, datainfo.precioneto, Seguro, ClickCollect).then(async (respuesta) => {
                             if (data.resultado_payw == "A") {
                                 precioreal = (parseFloat(datainfo.monto) - parseFloat(costoenvio));
                                 precioreal = (parseFloat(precioreal) - parseFloat(Seguro));
@@ -487,7 +548,7 @@ Router.post('/api/pagos/2dsecure/boletas/v1', (req, res, next) => {//AQUI
                         ccvdecrypt = respuesta;
                         pw2empeno.ejecutarcobrov4(vencimientodecrypt, ccvdecrypt, tarjetadecrypt, datainfo.monto, datainfo.codigosucursal, boletareference, datainfo.status, datainfo.eci, datainfo.xid, datainfo.cavv).then(async (respuesta) => {
                             const { ...data } = respuesta;
-                            sendinfo.grabardatosempenov3(data.referencia?data.referencia:1, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.boleta, fechaConsulta, datainfo.codigotipopago, datainfo.diaspagados, aplicacomision).then(async (respuesta) => {
+                            sendinfo.grabardatosempenov3(data.referencia ? data.referencia : 1, Reference3D, data.fecha_req_cte, data.auth_req_date, data.auth_rsp_date, data.fecha_rsp_cte, data.resultado_payw, data.auth_result, data.payw_code, data.codigo_aut, data.texto, data.card_holder, data.issuing_bank, data.card_brand, data.card_type, tarjetadecrypt, datainfo.correoelectronico, datainfo.monto, datainfo.codigosucursal, datainfo.boleta, fechaConsulta, datainfo.codigotipopago, datainfo.diaspagados, aplicacomision).then(async (respuesta) => {
                                 if (data.resultado_payw == "A") {
                                     await sms.send(datainfo.celular, "Se aplicó un pago a la boleta: " + datainfo.boleta + " por un monto de : $" + datainfo.monto);
                                     await sms.sendInfoCentral(datainfo.celular, "Se aplicó un pago a la boleta: " + datainfo.boleta + " por un monto de : $" + datainfo.monto);
@@ -518,6 +579,58 @@ Router.post('/api/pagos/2dsecure/boletas/v1', (req, res, next) => {//AQUI
 });
 
 
+const GetRespuestasPW2 = async (Reference3D, Tipo) =>{
+    return new Promise((resolve, reject)=>{
+        const tRespuestas = Tipo=='boletas'?'respuestaspw2':Tipo=='pyv'?'respuestaspp_pw2':'respuestaspw2remates';
+        const tInformacion = Tipo=='boletas'?'informacionpw2':Tipo=='pyv'?'informacionpp_pw2':'informacionTransaccionVentas';
+        const idInf = Tipo=='boletas'?'idPrincipal':Tipo=='pyv'?'id':'idPrincipal';
+        
+        const stQuery = `select * 
+        from ${tRespuestas} resp,
+        ${tInformacion} inf
+        where (inf.id = resp.control_number or inf.idPrincipal = resp.control_number) 
+        and resp.control_number = '${Reference3D}'`;
+        const cnn = cmd.createConnection(configMaxilanaDB);
+        cnn.connect((error) => {
+            cnn.query(stQuery, (error, results, fields) => {
+                cnn.end(errend => { return reject(errend) });
+                if (error) { return reject(error) }
+                if (results.length == 0) { return reject(new Error('La consulta a información no arrojó datos.')) }
+                Resultado = JSON.parse(JSON.stringify(results));
+                return resolve(Resultado)
+            });;
+        })
+    })
+}
+const GetInfoProducto = async (Reference3D) => {
+    return new Promise((resolve, reject)=>{
+        const stQuery = `select i.id, i.idPrincipal, i.codigosucursal, i.upc, tds.status,
+        tds.cardtype, ienv.nombre, ienv.celular, ienv.correoelectronico,
+        ienv.direccion, ienv.codigopostal, ienv.colonia,ienv.municipio,ienv.municipio,
+        ienv.estado,ienv.fecha,ienv.instrucciones,plz.correoparaconfirmaciondecompra,
+        suc.correoelectronico as correosucursal 
+        from informacionTransaccionVentas i,
+        informacion3dsecure tds, 
+        informacionEnvioArticulos ienv,
+        sucursales suc,
+        plazas plz
+        where i.idPrincipal = '${Reference3D}'
+        and tds.reference = i.idPrincipal
+        and ienv.id = i.idPrincipal
+        and suc.numero = i.codigosucursal
+        and plz.codigo = suc.ciudad`;
+        const cnn = cmd.createConnection(configMaxilanaDB);
+        cnn.connect((error) => {
+            cnn.query(stQuery, (error, results, fields) => {
+                cnn.end(errend => { return reject(errend) });
+                if (error) { return reject(error) }
+                if (results.length == 0) { return reject(new Error('La consulta a información no arrojó datos.')) }
+                Resultado = JSON.parse(JSON.stringify(results));
+                return resolve(Resultado)
+            });;
+        })
+    })
+}
 // async function guardarRespuestasPP_PW2(reference3d, dataPw2, info, card, esvale) {
 //     return new Promise((resolve, reject) => {
 //         const { referencia, resultado_payw, id_afiliacion, fecha_req_cte, fecha_rsp_cte, texto } = dataPw2;

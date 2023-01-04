@@ -5,7 +5,7 @@ const MailConf = {
     auth:{
         type:'login',
         user:'webmaxilana@maxilana.com',
-        pass:'M@xiW3b2022'
+        pass:'Fun06196'
     }
 }
 

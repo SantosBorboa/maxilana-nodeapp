@@ -60,6 +60,7 @@ app.post('/api/subastas/encrypt', utilsRouter);
 app.post('/api/subastas/decrypt', utilsRouter);
 app.post('/api/email/reenvio', utilsRouter);
 app.post('/api/sendmailprueba', utilsRouter);
+app.post('/api/utils/xmlconverter', utilsRouter);
 
 //security
 app.post('/api/security/gettoken', securityRouter);
@@ -172,6 +173,7 @@ app.get('/api/procesos/pagospendientes', (req, res) => {
 /// CONSOLA /////////
 app.post('/api/consola/login', consolaRouter);
 app.get('/api/consola/pagos/ventas', consolaRouter);
+app.post('/api/consola/pagos/ventas/mysql', consolaRouter);
 app.post('/api/consola/pagos/empeno', consolaRouter);
 app.post('/api/consola/pagos/control', consolaRouter);
 app.post('/api/consola/pagos/ppyvales', consolaRouter);
@@ -204,6 +206,7 @@ app.post('/api/retorno3dSecure', (req, res, next) => {
 /******* END PAYWORKS 3DSECURE 2.0 ************/
 
 /************** BEGIN PAYWORKS 2.0 **************/
+app.post('/api/pagos/2dsecure/reenviocorreo', router2dsecure);
 app.post('/api/pagos/2dsecure/pruebaguardado', router2dsecure);
 app.post('/api/pagos/2dsecure/web/boletas', router2dsecure);
 app.post('/api/pagos/2dsecure/web/producto', router2dsecure);
@@ -240,7 +243,7 @@ app.get('/api/fecha', (req, res) => {
 
 app.get('/api/reset/', utilsRouter);
 
-app.post('/api/smstest', (req, res, next)=>{return res.send({ok:'ok'})})
+app.post('/api/smstest', (req, res, next)=>{return res.send({ok:'ok'})});
 
 function verifyToken(req, res, next) {
     //Get Auth header value  
