@@ -1,5 +1,7 @@
 //const statusMonitor = require('express-status-monitor');
 const express = require('express');
+const { engine } = require('express-handlebars');
+
 const cors = require("cors");
 
 let multer = require('multer');
@@ -22,10 +24,19 @@ app.use(function (req, res, next) {
     next();
 });
 
+//view engine middleware
+app.engine('handlebars', engine());
+app.set('view engine', 'handlebars');
+app.set('views', './views');
+
 //middlewares de autenticacion por token.....
 const mw = require('./Middlewares/secureport.js');
-app.use((req, res, next) => { mw.Logger(req, res, next) })
-app.use((req, res, next) => { mw.SecureEntry(req, res, next) });
+//app.use((req, res, next) => { mw.Logger(req, res, next) })
+// app.use((req, res, next) => { mw.SecureEntry(req, res, next) });
+
+app.get('/', (req, res, next) => {
+    res.render('home', {layout: false});
+});
 
 //******ROUTERS*******//
 const rematesRouter = require('./routes/Remates/Remates.js');
@@ -194,6 +205,10 @@ app.post('/api/pagos/3dsecure/web/vales/v1', router3dsecure);
 app.post('/api/pagos/3dsecure/web/boleta/v1', router3dsecure);
 app.post('/api/pagos/3dsecure/web/productos/v1', router3dsecure);
 app.post('/api/pagos/3dsecure/rechazos', router3dsecure);
+
+app.post('/api/pagos/3dsecure/web/subastas', router3dsecure);
+app.get('/api/pagos/3dsecure/envio', router3dsecure);
+app.post('/api/pagos/3dsecure/retorno', router3dsecure);
 
 app.post('/api/retorno3dSecure', (req, res, next) => {
     const data = {

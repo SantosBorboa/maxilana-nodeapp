@@ -591,5 +591,15 @@ Router.post('/api/pagos/3dsecure/rechazos', async (req, res, next) => {
         return  res.send({error: error.message, status: '401'})
     }
 });
+Router.Post('/api/pagos/3dsecure/web/subastas', async (req, res, next) => {
+    
+});
+Router.get('/api/pagos/3dsecure/envio', async (req, res, next)=>{
+    const {...q} = req.query;
+    if(!q.Card || !q.CreditType){return res.send({error:'no hay información para mandar al portal.'})}
+    const body = req.body.type?req.body:undefined;
+    res.render('3dsecure', {q}); 
+});
+
 
 module.exports = Router;

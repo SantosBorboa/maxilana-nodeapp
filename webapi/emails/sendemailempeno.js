@@ -11,7 +11,7 @@ let sendemail = async function datos(cliente, codigosucursal, sucursal, boleta, 
       "auth": {
         "type": "login",
         "user": "webmaxilana@maxilana.com",
-        "pass": "Sud32487"
+        "pass": "OPbtf770r/@61to"
       }
       // "auth":{ 
       //         "type":"login", 
@@ -172,7 +172,7 @@ let sendemailprueba = async function datos(cliente, importe, autorizacion, refer
       "auth": {
         "type": "login",
         "user": "webmaxilana@maxilana.com",
-        "pass": "Fun06196"
+        "pass": "OPbtf770r/@61to"
       }
     };
     body = body + '<table id="m_-6863763375563930348container" style="width:640px;color:rgb(51,51,51);margin:0 auto;border-collapse:collapse">';
@@ -335,7 +335,7 @@ let sendemailmultiple = async function datos(cliente, importe, autorizacion, ref
       "auth": {
         "type": "login",
         "user": "webmaxilana@maxilana.com",
-        "pass": "Fun06196"
+        "pass": "OPbtf770r/@61to"
       }
     };
     body = body + '<table id="m_-6863763375563930348container" style="width:640px;color:rgb(51,51,51);margin:0 auto;border-collapse:collapse">';

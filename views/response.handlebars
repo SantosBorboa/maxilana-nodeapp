@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+
+<body onload="formLoad()">
+    <form method="POST" action="http://localhost:3000/pagos/respuesta">
+    <input id="3dreference" name="3dreference" value="">
+    <input id="status" name="status" value="">
+    <input id="Total" name="Total" value="">
+    <input id="MESSAGE" name="MESSAGE" value="">
+    <input id="ECI" name="ECI" value="">
+    <input id="XID" name="XID" value="">
+    <input id="CAVV" name="CAVV" value="">
+    <button id="btnSubmit"></button>
+    </form>
+</body>
+<script>
+    function formLoad() {
+        var status = '{{data.Status}}';
+        var Referencia3d = '{{data.REFERENCE3D}}';
+        var Total = '';
+        var ECI = '{{data.ECI}}';
+        var XID = '{{data.XID}}';
+        var CAVV = '{{data.CAVV}}';
+        var MESSAGE = '';
+
+        document.getElementById("3dreference").value = Referencia3d;
+        document.getElementById("status").value = status;
+        document.getElementById("Total").value = Total;
+        document.getElementById("ECI").value = ECI;
+        document.getElementById("XID").value = XID;
+        document.getElementById("CAVV").value = CAVV;
+        document.getElementById("MESSAGE").value = MESSAGE;
+
+        document.getElementById("btnSubmit").click();
+    }
+</script>
+
+</html>
