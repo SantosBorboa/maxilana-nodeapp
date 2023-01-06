@@ -206,6 +206,7 @@ app.post('/api/pagos/3dsecure/web/boleta/v1', router3dsecure);
 app.post('/api/pagos/3dsecure/web/productos/v1', router3dsecure);
 app.post('/api/pagos/3dsecure/rechazos', router3dsecure);
 
+
 app.post('/api/pagos/3dsecure/web/subastas', router3dsecure);
 app.get('/api/pagos/3dsecure/envio', router3dsecure);
 app.post('/api/pagos/3dsecure/retorno', router3dsecure);
